@@ -242,7 +242,49 @@ export default function Rapor() {
             <h1 style={S.h1}>Göndermeden önce kontrol et</h1>
             <p style={S.sub}>{oturum.il} · {birimler.length} birim raporlandı</p>
 
-            <ReviewSummary birimler={birimler} answers={answers} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 18 }}>
+              {birimler.map((b) => {
+                const a = answers[b];
+                const meta = BIRIMLER.find((x) => x.key === b);
+                const toplamT = a.toplantiLokasyonlar.reduce((s, l) => s + (Number(l.katilim) || 0), 0);
+                const toplamD = a.dersLokasyonlar.reduce((s, l) => s + (Number(l.katilim) || 0), 0);
+                return (
+                  <div key={b} style={S.reviewCard}>
+                    <div style={S.reviewCardHead}><meta.icon size={16} color="#17A673" /> {meta.label}</div>
+                    <div style={S.reviewLine}>
+                      <span style={S.reviewLineLabel}>Komisyon toplantısı</span>
+                      <span style={S.reviewLineValue}>
+                        {a.toplantiYapildi ? `Yapıldı · ${a.toplantiLokasyonlar.length} lok. · ${toplamT} kişi` : "Yapılmadı"}
+                      </span>
+                    </div>
+                    {a.toplantiYapildi && a.toplantiLokasyonlar.length > 0 && (
+                      <div style={{ marginTop: 6, paddingLeft: 4, display: "flex", flexDirection: "column", gap: 3 }}>
+                        {a.toplantiLokasyonlar.map((l, i) => (
+                          <div key={i} style={{ fontSize: 12.5, color: "#5C6B70" }}>
+                            · {l.ad}{l.tur ? ` (${l.tur})` : ""} — {l.katilim || 0} kişi
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div style={{ ...S.reviewLine, marginTop: 8 }}>
+                      <span style={S.reviewLineLabel}>Haftalık ders</span>
+                      <span style={S.reviewLineValue}>
+                        {a.dersYapildi ? `Yapıldı · ${a.dersLokasyonlar.length} lok. · ${toplamD} kişi` : "Yapılmadı"}
+                      </span>
+                    </div>
+                    {a.dersYapildi && a.dersLokasyonlar.length > 0 && (
+                      <div style={{ marginTop: 6, paddingLeft: 4, display: "flex", flexDirection: "column", gap: 3 }}>
+                        {a.dersLokasyonlar.map((l, i) => (
+                          <div key={i} style={{ fontSize: 12.5, color: "#5C6B70" }}>
+                            · {l.ad}{l.tur ? ` (${l.tur})` : ""} — {l.katilim || 0} kişi
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
 
             {hataMesaji && <div style={S.errorBox}>{hataMesaji}</div>}
 
@@ -262,41 +304,60 @@ export default function Rapor() {
             <div style={S.doneBadge}><Check size={26} strokeWidth={3} color="#fff" /></div>
             <h1 style={{ ...S.h1, marginTop: 18 }}>Rapor gönderildi</h1>
             <p style={S.sub}>{oturum.il} için bu haftaki saha verileri genel merkeze iletildi.</p>
-            
-            {/* Özet Alanı Butonun Üstüne Taşındı */}
-            <div style={{ textAlign: "left", marginTop: 30, marginBottom: 20 }}>
-              <div style={S.eyebrow}>GÖNDERİLEN ÖZET</div>
-              <ReviewSummary birimler={birimler} answers={answers} />
+
+            <div style={{ textAlign: "left", marginTop: 30 }}>
+              <div style={{ ...S.eyebrow, textAlign: "left" }}>GÖNDERİLEN RAPOR</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 12 }}>
+                {birimler.map((b) => {
+                  const a = answers[b];
+                  const meta = BIRIMLER.find((x) => x.key === b);
+                  const toplamT = a.toplantiLokasyonlar.reduce((s, l) => s + (Number(l.katilim) || 0), 0);
+                  const toplamD = a.dersLokasyonlar.reduce((s, l) => s + (Number(l.katilim) || 0), 0);
+                  return (
+                    <div key={b} style={S.reviewCard}>
+                      <div style={S.reviewCardHead}><meta.icon size={16} color="#17A673" /> {meta.label}</div>
+                      <div style={S.reviewLine}>
+                        <span style={S.reviewLineLabel}>Komisyon toplantısı</span>
+                        <span style={S.reviewLineValue}>
+                          {a.toplantiYapildi ? `Yapıldı · ${a.toplantiLokasyonlar.length} lok. · ${toplamT} kişi` : "Yapılmadı"}
+                        </span>
+                      </div>
+                      {a.toplantiYapildi && a.toplantiLokasyonlar.length > 0 && (
+                        <div style={{ marginTop: 6, paddingLeft: 4, display: "flex", flexDirection: "column", gap: 3 }}>
+                          {a.toplantiLokasyonlar.map((l, i) => (
+                            <div key={i} style={{ fontSize: 12.5, color: "#5C6B70" }}>
+                              · {l.ad}{l.tur ? ` (${l.tur})` : ""} — {l.katilim || 0} kişi
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div style={{ ...S.reviewLine, marginTop: 8 }}>
+                        <span style={S.reviewLineLabel}>Haftalık ders</span>
+                        <span style={S.reviewLineValue}>
+                          {a.dersYapildi ? `Yapıldı · ${a.dersLokasyonlar.length} lok. · ${toplamD} kişi` : "Yapılmadı"}
+                        </span>
+                      </div>
+                      {a.dersYapildi && a.dersLokasyonlar.length > 0 && (
+                        <div style={{ marginTop: 6, paddingLeft: 4, display: "flex", flexDirection: "column", gap: 3 }}>
+                          {a.dersLokasyonlar.map((l, i) => (
+                            <div key={i} style={{ fontSize: 12.5, color: "#5C6B70" }}>
+                              · {l.ad}{l.tur ? ` (${l.tur})` : ""} — {l.katilim || 0} kişi
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            <button onClick={() => { setPhase("setup"); setBirimler([]); setAnswers({}); }} style={{ ...S.primaryBtn, margin: "0 auto" }}>
+            <button onClick={() => { setPhase("setup"); setBirimler([]); setAnswers({}); }} style={{ ...S.primaryBtn, margin: "26px auto 0" }}>
               <Sparkles size={16} /> Yeni rapor başlat
             </button>
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function ReviewSummary({ birimler, answers }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 18 }}>
-      {birimler.map((b) => {
-        const a = answers[b];
-        const meta = BIRIMLER.find((x) => x.key === b);
-        const toplamT = a.toplantiLokasyonlar.reduce((s, l) => s + (Number(l.katilim) || 0), 0);
-        const toplamD = a.dersLokasyonlar.reduce((s, l) => s + (Number(l.katilim) || 0), 0);
-        return (
-          <div key={b} style={S.reviewCard}>
-            <div style={S.reviewCardHead}><meta.icon size={16} color="#17A673" /> {meta.label}</div>
-            <div style={S.reviewLine}><span style={S.reviewLineLabel}>Komisyon toplantısı</span>
-              <span style={S.reviewLineValue}>{a.toplantiYapildi ? `Yapıldı · ${a.toplantiLokasyonlar.length} lok. · ${toplamT} kişi` : "Yapılmadı"}</span></div>
-            <div style={S.reviewLine}><span style={S.reviewLineLabel}>Haftalık ders</span>
-              <span style={S.reviewLineValue}>{a.dersYapildi ? `Yapıldı · ${a.dersLokasyonlar.length} lok. · ${toplamD} kişi` : "Yapılmadı"}</span></div>
-          </div>
-        );
-      })}
     </div>
   );
 }
@@ -313,8 +374,7 @@ function YesNo({ title, hint, value, onChange }) {
     </div>
   );
 }
-
-function Count({ title, hint, value, onChange }) {
+function Count({ title, hint, value, onChange, max = 20 }) {
   const n = value || 0;
   const [text, setText] = useState(String(n));
 
@@ -355,7 +415,6 @@ function Count({ title, hint, value, onChange }) {
     </div>
   );
 }
-
 function LocDetails({ birim, city, title, locs, setLocValue }) {
   const options = birim === "universite" ? genericUni(city) : [];
 
@@ -364,74 +423,158 @@ function LocDetails({ birim, city, title, locs, setLocValue }) {
       <h2 style={S.h2}>{title} <span style={S.req}>*</span></h2>
       <p style={S.hint}>Her lokasyon için ilgili bilgileri doldur.</p>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {locs.map((loc, i) => {
-          const takenAd = new Set(
-            locs.filter((_, j) => j !== i).map((l) => l.ad).filter((v) => v && v !== "__diger__")
-          );
-          const availableUniOptions = options.filter((o) => !takenAd.has(o));
+{locs.map((loc, i) => {
+  const takenAd = new Set(
+    locs
+      .filter((_, j) => j !== i)
+      .map((l) => l.ad)
+      .filter((v) => v && v !== "__diger__")
+  );
 
-          const takenTur = new Set(
-            locs.filter((_, j) => j !== i).map((l) => l.tur).filter(Boolean)
-          );
-          const availableTurOptions = OKUL_TUR.filter((o) => !takenTur.has(o));
+  const availableUniOptions = options.filter((o) => !takenAd.has(o));
 
-          const isDuplicateName =
-            !!loc.ad && locs.some((l, j) => j !== i && normName(l.ad) === normName(loc.ad));
+  const takenTur = new Set(
+    locs
+      .filter((_, j) => j !== i)
+      .map((l) => l.tur)
+      .filter(Boolean)
+  );
 
-          return (
-            <div key={i} style={S.locCard}>
-              <div style={S.locCardHead}>Lokasyon {i + 1}</div>
-              {birim === "universite" ? (
-                <>
-                  <label style={S.miniLabel}>Üniversite</label>
-                  <select
-                    style={S.select}
-                    value={loc.digerMi ? "__diger__" : loc.ad}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      if (v === "__diger__") setLocValue(i, { digerMi: true, ad: "" });
-                      else setLocValue(i, { digerMi: false, ad: v });
-                    }}
-                  >
-                    <option value="">Seçiniz…</option>
-                    {availableUniOptions.map((o) => <option key={o} value={o}>{o}</option>)}
-                    <option value="__diger__">Diğer (yaz)</option>
-                  </select>
-                  {loc.digerMi && (
-                    <input
-                      style={{ ...S.select, marginTop: 8, ...(isDuplicateName ? { borderColor: "#D95B43" } : {}) }}
-                      placeholder="Üniversite adını yazın"
-                      value={loc.ad}
-                      onChange={(e) => setLocValue(i, { ad: e.target.value })}
-                    />
-                  )}
-                </>
-              ) : (
-                <>
-                  <label style={S.miniLabel}>Okul türü</label>
-                  <select style={S.select} value={loc.tur} onChange={(e) => setLocValue(i, { tur: e.target.value })}>
-                    <option value="">Seçiniz…</option>
-                    {availableTurOptions.map((o) => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                  <label style={{ ...S.miniLabel, marginTop: 10 }}>Okul adı</label>
-                  <input
-                    style={{ ...S.select, ...(isDuplicateName ? { borderColor: "#D95B43" } : {}) }}
-                    placeholder="Örn. Atatürk Fen Lisesi"
-                    value={loc.ad}
-                    onChange={(e) => setLocValue(i, { ad: e.target.value })}
-                  />
-                </>
-              )}
-              {isDuplicateName && (
-                <p style={{ fontSize: 12, color: "#D95B43", marginTop: 6 }}>
-                  Bu isim başka bir lokasyonda zaten kullanıldı. Lütfen farklı bir isim girin.
-                </p>
-              )}
-              <label style={{ ...S.miniLabel, marginTop: 10 }}>Katılımcı sayısı</label>
-              <input type="number" min="0" style={S.select} placeholder="Örn. 24" value={loc.katilim} onChange={(e) => setLocValue(i, { katilim: e.target.value })} />
-            </div>
-          );
-        })}
+  const availableTurOptions = OKUL_TUR.filter((o) => !takenTur.has(o));
+
+  const isDuplicateName =
+    !!loc.ad &&
+    locs.some(
+      (l, j) =>
+        j !== i &&
+        normName(l.ad) === normName(loc.ad)
+    );
+
+  return (
+    <div key={i} style={S.locCard}>
+      <div style={S.locCardHead}>Lokasyon {i + 1}</div>
+
+      {birim === "universite" ? (
+        <>
+          <label style={S.miniLabel}>Üniversite</label>
+
+          <SearchableSelect
+            options={availableUniOptions}
+            value={loc.digerMi ? "__diger__" : loc.ad}
+            onChange={(v) => {
+              if (v === "__diger__") {
+                setLocValue(i, {
+                  digerMi: true,
+                  ad: "",
+                });
+              } else {
+                setLocValue(i, {
+                  digerMi: false,
+                  ad: v,
+                });
+              }
+            }}
+            placeholder="Üniversite adı yazarak arayın…"
+            allowOther
+            otherValue="__diger__"
+            otherLabel="Diğer (yaz)"
+          />
+
+          {loc.digerMi && (
+            <input
+              style={{
+                ...S.select,
+                marginTop: 8,
+                ...(isDuplicateName
+                  ? { borderColor: "#D95B43" }
+                  : {}),
+              }}
+              placeholder="Üniversite adını yazın"
+              value={loc.ad}
+              onChange={(e) =>
+                setLocValue(i, {
+                  ad: e.target.value,
+                })
+              }
+            />
+          )}
+        </>
+      ) : (
+        <>
+          <label style={S.miniLabel}>Okul türü</label>
+
+          <select
+            style={S.select}
+            value={loc.tur}
+            onChange={(e) =>
+              setLocValue(i, {
+                tur: e.target.value,
+              })
+            }
+          >
+            <option value="">Seçiniz…</option>
+
+            {availableTurOptions.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+          </select>
+
+          <label style={{ ...S.miniLabel, marginTop: 10 }}>
+            Okul adı
+          </label>
+
+          <input
+            style={{
+              ...S.select,
+              ...(isDuplicateName
+                ? { borderColor: "#D95B43" }
+                : {}),
+            }}
+            placeholder="Örn. Atatürk Fen Lisesi"
+            value={loc.ad}
+            onChange={(e) =>
+              setLocValue(i, {
+                ad: e.target.value,
+              })
+            }
+          />
+        </>
+      )}
+
+      {isDuplicateName && (
+        <p
+          style={{
+            fontSize: 12,
+            color: "#D95B43",
+            marginTop: 6,
+          }}
+        >
+          Bu isim başka bir lokasyonda zaten kullanıldı.
+          Lütfen farklı bir isim girin.
+        </p>
+      )}
+
+      <label style={{ ...S.miniLabel, marginTop: 10 }}>
+        Katılımcı sayısı
+      </label>
+
+      <input
+        type="number"
+        min="0"
+        style={S.select}
+        placeholder="Örn. 24"
+        value={loc.katilim}
+        onChange={(e) =>
+          setLocValue(i, {
+            katilim: e.target.value,
+          })
+        }
+      />
+    </div>
+  );
+})}
       </div>
     </div>
   );
