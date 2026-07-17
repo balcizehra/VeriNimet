@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { MapPin, Building2, CalendarCheck, BookOpen, ChevronDown, X, Users, LogOut, TrendingUp, PieChart as PieIcon } from "lucide-react";
+import { MapPin, Building2, CalendarCheck, BookOpen, ChevronDown, X, Users, LogOut, TrendingUp, PieChart as PieIcon, Search } from "lucide-react";
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
   LineChart, Line, XAxis, YAxis, CartesianGrid,
@@ -9,6 +9,10 @@ import { S } from "../components/styles";
 import { BIRIMLER } from "../components/data";
 
 function sum(arr) { return arr.reduce((s, x) => s + (Number(x.katilim) || 0), 0); }
+
+function norm(s) {
+  return (s || "").toLocaleLowerCase("tr").trim();
+}
 
 const BIRIM_RENK = {
   universite: "#17A673",
@@ -250,16 +254,39 @@ function FilterSelect({ icon, placeholder, value, onChange, options, disabled })
 }
 
 function Section({ icon, title, rows, emptyText, totalLabel }) {
+  const [arama, setArama] = useState("");
+  const q = norm(arama);
+  const filtered = !q ? rows : rows.filter((r) => norm(r.ad).includes(q));
   const kisi = sum(rows);
+
   return (
     <div style={S.section}>
-      <div style={S.sectionHead}>{icon}<span>{title}</span></div>
+      <div style={{ ...S.sectionHead, justifyContent: "space-between", marginBottom: rows.length > 0 ? 12 : undefined }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          {icon}<span>{title}</span>
+        </div>
+
+        {rows.length > 0 && (
+          <div style={{ position: "relative", width: 220, maxWidth: "45%" }}>
+            <Search size={13} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#7C8C90", pointerEvents: "none" }} />
+            <input
+              style={{ ...S.input, padding: "7px 10px 7px 28px", fontSize: 12.5 }}
+              placeholder="Üniversite ara…"
+              value={arama}
+              onChange={(e) => setArama(e.target.value)}
+            />
+          </div>
+        )}
+      </div>
+
       {rows.length === 0 ? (
         <div style={S.sectionEmpty}>{emptyText}</div>
+      ) : filtered.length === 0 ? (
+        <div style={S.sectionEmpty}>"{arama}" ile eşleşen sonuç bulunamadı.</div>
       ) : (
         <>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {rows.map((r, i) => (
+            {filtered.map((r, i) => (
               <div key={i} style={S.rowCard}>
                 <div style={S.rowMain}>
                   <div style={S.rowYer}>{r.ad}</div>
