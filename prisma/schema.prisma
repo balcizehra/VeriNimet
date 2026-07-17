@@ -52,3 +52,9 @@ model Lokasyon {
   tur      String? // lise/ortaokul için okul türü; üniversitede boş
   katilim  Int
 }
+model SistemAyari {
+  id             Int     @id @default(autoincrement())
+  anahtar        String  @unique // Örn: "gecen_hafta_izni"
+  degerBool      Boolean @default(false) // İzin açık mı, kapalı mı?
+  guncellenmeTarihi DateTime @updatedAt
+}
