@@ -75,7 +75,12 @@ export const S = {
   emptyTitle: { fontFamily: "'Manrope', sans-serif", fontWeight: 700, fontSize: 15, marginBottom: 6 },
   emptySub: { fontSize: 13, color: "#7C8C90", maxWidth: 320, margin: "0 auto", lineHeight: 1.5 },
 
-  summaryRow: { display: "flex", gap: 12, padding: "18px 22px 4px" },
+  summaryRow: { display: "flex", gap: 12, padding: "18px 22px 4px", flexWrap: "wrap" },
+  chartsGrid: { display: "flex", gap: 14, padding: "4px 22px 20px", flexWrap: "wrap" },
+  chartCard: { flex: "1 1 300px", minWidth: 280, border: "1px solid #E1E8E7", borderRadius: 14, padding: "16px 16px 8px", background: "#FBFCFC" },
+  chartTitle: { fontFamily: "'Manrope', sans-serif", fontWeight: 800, fontSize: 13.5, color: "#0F3A44", marginBottom: 10 },
+  chartEmpty: { fontSize: 12.5, color: "#7C8C90", textAlign: "center", padding: "40px 0" },
+  
   summaryCard: { flex: 1, border: "1px solid #E1E8E7", borderRadius: 14, padding: "14px 16px", background: "linear-gradient(180deg,#FBFCFC,#F5F8F7)" },
   summaryLabel: { display: "flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 700, color: "#17A673", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.04em" },
   summaryValue: { fontFamily: "'Manrope', sans-serif", fontSize: 30, fontWeight: 800, lineHeight: 1 },

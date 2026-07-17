@@ -3,11 +3,15 @@ import { requireRole } from "../../../lib/auth";
 
 export default requireRole(async function handler(req, res) {
   const { il, birim } = req.query;
-  if (!il || !birim) return res.status(400).json({ error: "il ve birim zorunlu." });
+
+  const where = {};
+  if (il) where.il = il;
+  if (birim) where.birim = birim;
 
   const kayitlar = await prisma.rapor.findMany({
-    where: { il, birim },
+    where,
     select: { hafta: true },
+    distinct: ["hafta"],
     orderBy: { hafta: "desc" },
   });
 

@@ -1,10 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { MapPin, Building2, CalendarCheck, BookOpen, ChevronDown, X, Users, LogOut } from "lucide-react";
+import { MapPin, Building2, CalendarCheck, BookOpen, ChevronDown, X, Users, LogOut, TrendingUp, PieChart as PieIcon } from "lucide-react";
+import {
+  PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
+  LineChart, Line, XAxis, YAxis, CartesianGrid,
+} from "recharts";
 import { S } from "../components/styles";
 import { BIRIMLER } from "../components/data";
 
 function sum(arr) { return arr.reduce((s, x) => s + (Number(x.katilim) || 0), 0); }
+
+const BIRIM_RENK = {
+  universite: "#17A673",
+  lise: "#4C6FFF",
+  ortaokul: "#F5A623",
+  cocuk: "#D95B43",
+};
 
 export default function Admin() {
   const router = useRouter();
@@ -14,6 +25,12 @@ export default function Admin() {
   const [birim, setBirim] = useState("");
   const [haftalar, setHaftalar] = useState([]);
   const [hafta, setHafta] = useState("");
+
+  // Level 0 / 1 (özet + grafikler)
+  const [summary, setSummary] = useState(null);
+  const [ozetYukleniyor, setOzetYukleniyor] = useState(false);
+
+  // Level 2 (detay — mevcut davranış)
   const [rapor, setRapor] = useState(null);
   const [yukleniyor, setYukleniyor] = useState(false);
 
@@ -25,15 +42,32 @@ export default function Admin() {
     });
   }, [router]);
 
+  // Hafta listesi: seviyeye göre esnek
   useEffect(() => {
-    if (!city || !birim) { setHaftalar([]); setHafta(""); setRapor(null); return; }
-    fetch(`/api/reports/weeks?il=${encodeURIComponent(city)}&birim=${birim}`)
+    const params = new URLSearchParams();
+    if (city) params.set("il", city);
+    if (birim) params.set("birim", birim);
+    fetch(`/api/reports/weeks?${params.toString()}`)
       .then((r) => r.json())
       .then((d) => { setHaftalar(d.haftalar || []); setHafta((d.haftalar || [])[0] || ""); });
   }, [city, birim]);
 
+  // Seviye 0/1: Türkiye geneli ya da il özeti
   useEffect(() => {
-    if (!city || !birim) return;
+    if (birim) { setSummary(null); return; }
+    setOzetYukleniyor(true);
+    const params = new URLSearchParams();
+    if (city) params.set("il", city);
+    if (hafta) params.set("hafta", hafta);
+    fetch(`/api/reports/summary?${params.toString()}`)
+      .then((r) => r.json())
+      .then((d) => { setSummary(d); if (!hafta) setHafta(d.hafta); })
+      .finally(() => setOzetYukleniyor(false));
+  }, [city, birim, hafta]);
+
+  // Seviye 2: il + birim detay (mevcut davranış, değişmedi)
+  useEffect(() => {
+    if (!city || !birim) { setRapor(null); return; }
     setYukleniyor(true);
     const q = hafta ? `&hafta=${hafta}` : "";
     fetch(`/api/reports?il=${encodeURIComponent(city)}&birim=${birim}${q}`)
@@ -68,10 +102,10 @@ export default function Admin() {
         </div>
 
         <div style={S.filterBar}>
-          <FilterSelect icon={<MapPin size={14} />} placeholder="İl seçiniz…" value={city}
+          <FilterSelect icon={<MapPin size={14} />} placeholder="Tüm Türkiye" value={city}
             onChange={(v) => { setCity(v); setBirim(""); }} options={iller.map((c) => ({ value: c, label: c }))} />
           <FilterSelect icon={birimMeta ? <birimMeta.icon size={14} /> : <Building2 size={14} />}
-            placeholder={city ? "Birim seçiniz…" : "Önce il seçin"} value={birim} onChange={setBirim} disabled={!city}
+            placeholder={city ? "Tüm birimler" : "Önce il seçin"} value={birim} onChange={setBirim} disabled={!city}
             options={BIRIMLER.map((b) => ({ value: b.key, label: b.label }))} />
           {haftalar.length > 0 && (
             <FilterSelect icon={<CalendarCheck size={14} />} placeholder="Hafta" value={hafta} onChange={setHafta}
@@ -82,12 +116,8 @@ export default function Admin() {
           )}
         </div>
 
-        {(!city || !birim) && (
-          <div style={S.empty}>
-            <div style={S.emptyIcon}><CalendarCheck size={22} color="#7C8C90" /></div>
-            <div style={S.emptyTitle}>Rapor görüntülemek için il ve birim seç</div>
-            <div style={S.emptySub}>Seçim yapıldığında o ile ve birime ait haftalık toplantı ve ders verileri burada listelenecek.</div>
-          </div>
+        {!birim && (
+          <SummaryDashboard summary={summary} loading={ozetYukleniyor} il={city} hafta={hafta} />
         )}
 
         {city && birim && yukleniyor && <div style={{ padding: 30, textAlign: "center", color: "#7C8C90", fontSize: 13 }}>Yükleniyor…</div>}
@@ -123,6 +153,84 @@ export default function Admin() {
               totalLabel={(n, kisi) => `Toplam ${n} lokasyonda, ${kisi} kişi ile haftalık ders yapıldı.`} />
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function SummaryDashboard({ summary, loading, il, hafta }) {
+  if (loading && !summary) {
+    return <div style={{ padding: 30, textAlign: "center", color: "#7C8C90", fontSize: 13 }}>Yükleniyor…</div>;
+  }
+  if (!summary) return null;
+
+  const { genel, birimOzet, trend, ilSayisi } = summary;
+  const toplamKatilim = genel.toplantiKatilim + genel.dersKatilim;
+
+  const pieData = Object.entries(birimOzet)
+    .map(([key, v]) => ({
+      key,
+      label: BIRIMLER.find((b) => b.key === key)?.label || key,
+      value: v.toplantiKatilim + v.dersKatilim,
+    }))
+    .filter((d) => d.value > 0);
+
+  return (
+    <div className="fade">
+      <div style={S.summaryRow}>
+        <div style={S.summaryCard}>
+          <div style={S.summaryLabel}><CalendarCheck size={13} /> Toplam Toplantı</div>
+          <div style={S.summaryValue}>{genel.toplantiKatilim}</div>
+          <div style={S.summarySub}>{genel.toplantiLokasyon} lokasyon{!il ? ` · ${ilSayisi} il` : ""} · {hafta}</div>
+        </div>
+        <div style={S.summaryCard}>
+          <div style={S.summaryLabel}><BookOpen size={13} /> Toplam Haftalık Ders</div>
+          <div style={S.summaryValue}>{genel.dersKatilim}</div>
+          <div style={S.summarySub}>{genel.dersLokasyon} lokasyon{!il ? ` · ${ilSayisi} il` : ""} · {hafta}</div>
+        </div>
+        <div style={S.summaryCard}>
+          <div style={S.summaryLabel}><Users size={13} /> Toplam Katılımcı</div>
+          <div style={S.summaryValue}>{toplamKatilim}</div>
+          <div style={S.summarySub}>{il ? il : "Tüm Türkiye"} · {hafta}</div>
+        </div>
+      </div>
+
+      <div style={S.chartsGrid}>
+        <div style={S.chartCard}>
+          <div style={S.chartTitle}><PieIcon size={14} style={{ verticalAlign: -2, marginRight: 6 }} />Birim Dağılımı</div>
+          {pieData.length === 0 ? (
+            <div style={S.chartEmpty}>Bu hafta için veri yok.</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie data={pieData} dataKey="value" nameKey="label" innerRadius={55} outerRadius={85} paddingAngle={3}>
+                  {pieData.map((d) => <Cell key={d.key} fill={BIRIM_RENK[d.key] || "#7C8C90"} />)}
+                </Pie>
+                <Tooltip />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        <div style={S.chartCard}>
+          <div style={S.chartTitle}><TrendingUp size={14} style={{ verticalAlign: -2, marginRight: 6 }} />Haftalık Katılım Trendi</div>
+          {!trend || trend.length === 0 ? (
+            <div style={S.chartEmpty}>Yeterli geçmiş veri yok.</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={trend}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F1" />
+                <XAxis dataKey="hafta" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Line type="monotone" dataKey="toplanti" name="Toplantı" stroke="#17A673" strokeWidth={2.5} dot={false} />
+                <Line type="monotone" dataKey="ders" name="Haftalık Ders" stroke="#0F3A44" strokeWidth={2.5} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </div>
       </div>
     </div>
   );
