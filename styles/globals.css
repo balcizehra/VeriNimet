@@ -1,0 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600&display=swap');
+
+* { box-sizing: border-box; }
+html, body { padding: 0; margin: 0; background: #F5F7F6; font-family: 'Inter', sans-serif; color: #0F3A44; }
+a { color: inherit; }
+button, input, select { font-family: inherit; }
+
+.fade { animation: fadeIn .25s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
