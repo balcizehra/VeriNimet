@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { ChevronLeft, ChevronRight, Check, MapPin, Plus, Minus, Sparkles, Send, LogOut } from "lucide-react";
 import { S } from "../components/styles";
 import { BIRIMLER, genericUni, OKUL_TUR } from "../components/data";
+import SearchableSelect from "../components/SearchableSelect";
 
 function emptyAnswer(birim) {
   return { birim, toplantiYapildi: null, toplantiLokasyonlar: [], dersYapildi: null, dersLokasyonlar: [] };
