@@ -229,23 +229,7 @@ export default function Rapor() {
             <h1 style={S.h1}>Göndermeden önce kontrol et</h1>
             <p style={S.sub}>{oturum.il} · {birimler.length} birim raporlandı</p>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 18 }}>
-              {birimler.map((b) => {
-                const a = answers[b];
-                const meta = BIRIMLER.find((x) => x.key === b);
-                const toplamT = a.toplantiLokasyonlar.reduce((s, l) => s + (Number(l.katilim) || 0), 0);
-                const toplamD = a.dersLokasyonlar.reduce((s, l) => s + (Number(l.katilim) || 0), 0);
-                return (
-                  <div key={b} style={S.reviewCard}>
-                    <div style={S.reviewCardHead}><meta.icon size={16} color="#17A673" /> {meta.label}</div>
-                    <div style={S.reviewLine}><span style={S.reviewLineLabel}>Komisyon toplantısı</span>
-                      <span style={S.reviewLineValue}>{a.toplantiYapildi ? `Yapıldı · ${a.toplantiLokasyonlar.length} lok. · ${toplamT} kişi` : "Yapılmadı"}</span></div>
-                    <div style={S.reviewLine}><span style={S.reviewLineLabel}>Haftalık ders</span>
-                      <span style={S.reviewLineValue}>{a.dersYapildi ? `Yapıldı · ${a.dersLokasyonlar.length} lok. · ${toplamD} kişi` : "Yapılmadı"}</span></div>
-                  </div>
-                );
-              })}
-            </div>
+            <ReviewSummary birimler={birimler} answers={answers} />
 
             {hataMesaji && <div style={S.errorBox}>{hataMesaji}</div>}
 
@@ -265,12 +249,41 @@ export default function Rapor() {
             <div style={S.doneBadge}><Check size={26} strokeWidth={3} color="#fff" /></div>
             <h1 style={{ ...S.h1, marginTop: 18 }}>Rapor gönderildi</h1>
             <p style={S.sub}>{oturum.il} için bu haftaki saha verileri genel merkeze iletildi.</p>
-            <button onClick={() => { setPhase("setup"); setBirimler([]); setAnswers({}); }} style={{ ...S.primaryBtn, margin: "26px auto 0" }}>
+            
+            {/* Özet Alanı Butonun Üstüne Taşındı */}
+            <div style={{ textAlign: "left", marginTop: 30, marginBottom: 20 }}>
+              <div style={S.eyebrow}>GÖNDERİLEN ÖZET</div>
+              <ReviewSummary birimler={birimler} answers={answers} />
+            </div>
+
+            <button onClick={() => { setPhase("setup"); setBirimler([]); setAnswers({}); }} style={{ ...S.primaryBtn, margin: "0 auto" }}>
               <Sparkles size={16} /> Yeni rapor başlat
             </button>
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function ReviewSummary({ birimler, answers }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 18 }}>
+      {birimler.map((b) => {
+        const a = answers[b];
+        const meta = BIRIMLER.find((x) => x.key === b);
+        const toplamT = a.toplantiLokasyonlar.reduce((s, l) => s + (Number(l.katilim) || 0), 0);
+        const toplamD = a.dersLokasyonlar.reduce((s, l) => s + (Number(l.katilim) || 0), 0);
+        return (
+          <div key={b} style={S.reviewCard}>
+            <div style={S.reviewCardHead}><meta.icon size={16} color="#17A673" /> {meta.label}</div>
+            <div style={S.reviewLine}><span style={S.reviewLineLabel}>Komisyon toplantısı</span>
+              <span style={S.reviewLineValue}>{a.toplantiYapildi ? `Yapıldı · ${a.toplantiLokasyonlar.length} lok. · ${toplamT} kişi` : "Yapılmadı"}</span></div>
+            <div style={S.reviewLine}><span style={S.reviewLineLabel}>Haftalık ders</span>
+              <span style={S.reviewLineValue}>{a.dersYapildi ? `Yapıldı · ${a.dersLokasyonlar.length} lok. · ${toplamD} kişi` : "Yapılmadı"}</span></div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -287,6 +300,7 @@ function YesNo({ title, hint, value, onChange }) {
     </div>
   );
 }
+
 function Count({ title, hint, value, onChange }) {
   const n = value || 0;
   return (
@@ -306,6 +320,7 @@ function Count({ title, hint, value, onChange }) {
     </div>
   );
 }
+
 function LocDetails({ birim, city, title, locs, setLocValue }) {
   const options = birim === "universite" ? genericUni(city) : [];
   return (
@@ -336,6 +351,7 @@ function LocDetails({ birim, city, title, locs, setLocValue }) {
               <>
                 <label style={S.miniLabel}>Okul türü</label>
                 <select style={S.select} value={loc.tur} onChange={(e) => setLocValue(i, "tur", e.target.value)}>
+                  <option value="">Seçiniz…</option>
                   <option value="">Seçiniz…</option>
                   {OKUL_TUR.map((o) => <option key={o} value={o}>{o}</option>)}
                 </select>
