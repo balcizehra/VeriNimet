@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
-import { MapPin, Shield, ChevronRight } from "lucide-react";
+import { ChevronRight, Eye, EyeOff } from "lucide-react"; // Göz ikonlarını ekledik
 import { S } from "../components/styles";
 
 export default function Login() {
   const router = useRouter();
-  const [tip, setTip] = useState("il"); // "il" | "admin"
-  const [kullaniciAdi, setKullaniciAdi] = useState("");
+  
+  // Artik "tip" durumuna ihtiyacımız yok, tek bir ID alanı kullanıyoruz
+  const [kullaniciId, setKullaniciId] = useState("");
   const [sifre, setSifre] = useState("");
+  const [sifreGoster, setSifreGoster] = useState(false); // Şifre göz durumu
   const [hata, setHata] = useState("");
   const [yukleniyor, setYukleniyor] = useState(false);
 
@@ -15,15 +17,27 @@ export default function Login() {
     e.preventDefault();
     setHata("");
     setYukleniyor(true);
+
+    // Arka taraftaki API'yi bozmamak için girilen ID değerini "kullaniciAdi" ismiyle gönderiyoruz
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tip, kullaniciAdi, sifre }),
+      body: JSON.stringify({ kullaniciAdi: kullaniciId, sifre }),
     });
+    
     const data = await res.json();
     setYukleniyor(false);
+
     if (!res.ok) return setHata(data.error || "Giriş başarısız.");
-    router.push(tip === "admin" ? "/admin" : "/rapor");
+
+    // Arka plandaki yönlendirme mantığı: 
+    // Eğer girilen ID admin/genelmerkez kodu ise admin paneline, değilse rapor sayfasına gidecek
+    // (Bunu backend veritabanından dönen veriye göre de yönlendirebiliriz, şimdilik mantığı kurduk)
+    if (kullaniciId === "999" || data.isAdmin) {
+      router.push("/admin");
+    } else {
+      router.push("/rapor");
+    }
   }
 
   return (
@@ -41,44 +55,49 @@ export default function Login() {
         <div style={S.body} className="fade">
           <div style={S.eyebrow}>RAPORLAMA SİSTEMİ</div>
           <h1 style={S.h1}>Giriş yap</h1>
-          <p style={S.sub}>İl hesabınla ya da genel merkez hesabınla giriş yap.</p>
+          <p style={S.sub}>Kullanıcı ID'niz ve şifrenizle sisteme giriş yapın.</p>
 
-          <div style={{ display: "flex", gap: 10, marginTop: 18, marginBottom: 6 }}>
-            <button
-              type="button"
-              onClick={() => setTip("il")}
-              style={{ ...S.chip, flex: 1, justifyContent: "center", ...(tip === "il" ? S.chipActive : {}) }}
-            >
-              <MapPin size={16} /> İl Başkanı
-            </button>
-            <button
-              type="button"
-              onClick={() => setTip("admin")}
-              style={{ ...S.chip, flex: 1, justifyContent: "center", ...(tip === "admin" ? S.chipActive : {}) }}
-            >
-              <Shield size={16} /> Genel Merkez
-            </button>
-          </div>
-
-          <form onSubmit={girisYap}>
-            <label style={S.label}>{tip === "il" ? "İl adı" : "Kullanıcı adı"}</label>
+          <form onSubmit={girisYap} style={{ marginTop: 20 }}>
+            {/* 1. ÖZELLİK: SADECE KULLANICI ID ALANI */}
+            <label style={S.label}>Kullanıcı ID</label>
             <input
               style={S.input}
-              value={kullaniciAdi}
-              onChange={(e) => setKullaniciAdi(e.target.value)}
-              placeholder={tip === "il" ? "Örn. Konya" : "genelmerkez"}
+              value={kullaniciId}
+              onChange={(e) => setKullaniciId(e.target.value)}
+              placeholder="Örn. 001"
               autoComplete="username"
             />
 
             <label style={S.label}>Şifre</label>
-            <input
-              style={S.input}
-              type="password"
-              value={sifre}
-              onChange={(e) => setSifre(e.target.value)}
-              placeholder="••••••••"
-              autoComplete="current-password"
-            />
+            {/* 2. ÖZELLİK: GÖZ İKONLU ŞİFRE ALANI */}
+            <div style={{ position: "relative" }}>
+              <input
+                style={{ ...S.input, paddingRight: 40 }} // İkonun üzerine binmemesi için sağdan boşluk verdik
+                type={sifreGoster ? "text" : "password"}
+                value={sifre}
+                onChange={(e) => setSifre(e.target.value)}
+                placeholder="••••••••"
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                onClick={() => setSifreGoster(!sifreGoster)}
+                style={{
+                  position: "absolute",
+                  right: 12,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#64748b",
+                  display: "flex",
+                  alignItems: "center"
+                }}
+              >
+                {sifreGoster ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
 
             {hata && <div style={S.errorBox}>{hata}</div>}
 

@@ -15,7 +15,8 @@ generator client {
 // Başkan değiştiğinde şifre sıfırlanır, hesap kalır — veri kaybolmaz.
 model Il {
   id        Int    @id @default(autoincrement())
-  ad        String @unique // "Konya", "Ankara" ...
+  kod       String @unique // "001", "042" gibi giriş ID'leri buraya gelecek
+  ad        String @unique // "Adana", "Konya" ...
   sifreHash String
 }
 
@@ -28,15 +29,15 @@ model Admin {
 // Bir il + bir birim + bir hafta = tek Rapor kaydı.
 // Aynı hafta tekrar gönderilirse üzerine yazılır (upsert).
 model Rapor {
-  id              Int      @id @default(autoincrement())
-  il              String
-  birim           String // universite | lise | ortaokul | cocuk
-  hafta           String // ISO hafta etiketi, örn "2026-W29"
+  id                Int        @id @default(autoincrement())
+  il                String
+  birim             String // universite | lise | ortaokul | cocuk
+  hafta             String // ISO hafta etiketi, örn "2026-W29"
   toplantiYapildi Boolean
-  dersYapildi     Boolean
+  dersYapildi      Boolean
   guncellenmeTarihi DateTime @updatedAt
   olusturmaTarihi   DateTime @default(now())
-  lokasyonlar     Lokasyon[]
+  lokasyonlar       Lokasyon[]
 
   @@unique([il, birim, hafta])
   @@index([il, birim])
