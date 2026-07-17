@@ -130,8 +130,11 @@ export const UNI_BY_CITY = {
 
 // Listede olmayan bir il gelirse boş liste döner — form yine de
 // "Diğer (yaz)" seçeneğiyle devam eder.
+// Liste her zaman Türkçe alfabetik sırayla döner (data içindeki sıra
+// önemli değil, gösterimde otomatik sıralanır).
 export function genericUni(city) {
-  return UNI_BY_CITY[city] || [];
+  const list = UNI_BY_CITY[city] || [];
+  return [...list].sort((a, b) => a.localeCompare(b, "tr"));
 }
 
 export const OKUL_TUR = ["Fen Lisesi", "Anadolu Lisesi", "İmam Hatip Lisesi", "Sosyal Bilimler Lisesi", "Mesleki ve Teknik Lise", "Diğer"];
