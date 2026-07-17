@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { ChevronLeft, ChevronRight, Check, MapPin, Plus, Minus, Sparkles, Send, LogOut } from "lucide-react";
 import { S } from "../components/styles";
 import { BIRIMLER, genericUni, OKUL_TUR } from "../components/data";
+import SearchableSelect from "../components/SearchableSelect";
 
 function emptyAnswer(birim) {
   return { birim, toplantiYapildi: null, toplantiLokasyonlar: [], dersYapildi: null, dersLokasyonlar: [] };
@@ -318,11 +319,15 @@ function LocDetails({ birim, city, title, locs, setLocValue }) {
             {birim === "universite" ? (
               <>
                 <label style={S.miniLabel}>Üniversite</label>
-                <select style={S.select} value={loc.ad} onChange={(e) => setLocValue(i, "ad", e.target.value)}>
-                  <option value="">Seçiniz…</option>
-                  {options.map((o) => <option key={o} value={o}>{o}</option>)}
-                  <option value="__diger__">Diğer (yaz)</option>
-                </select>
+                <SearchableSelect
+                  options={options}
+                  value={loc.ad}
+                  onChange={(v) => setLocValue(i, "ad", v)}
+                  placeholder="Üniversite adı yazarak arayın…"
+                  allowOther
+                  otherValue="__diger__"
+                  otherLabel="Diğer (yaz)"
+                />
                 {loc.ad === "__diger__" && (
                   <input style={{ ...S.select, marginTop: 8 }} placeholder="Üniversite adını yazın" onChange={(e) => setLocValue(i, "ad", e.target.value)} />
                 )}
