@@ -9,6 +9,7 @@ import { S } from "../components/styles";
 
 import { BIRIMLER, BIRIM_RENK } from "../components/data";
 import { haftaEtiketiGoster } from "../lib/hafta";
+import ChatWidget from "../components/ChatWidget";
 
 
 function sum(arr) { return arr.reduce((s, x) => s + (Number(x.katilim) || 0), 0); }
@@ -162,6 +163,8 @@ export default function Admin() {
               analyticsHref={`/analytics?modul=ders&il=${encodeURIComponent(city)}&birim=${birim}`} />
           </div>
         )}
+
+        <ChatWidget />
       </div>
     </div>
   );
