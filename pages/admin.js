@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { MapPin, Building2, CalendarCheck, BookOpen, ChevronDown, X, Users, LogOut } from "lucide-react";
 import { S } from "../components/styles";
 import { BIRIMLER } from "../components/data";
+import { haftaEtiketiGoster } from "../lib/hafta";
 
 function sum(arr) { return arr.reduce((s, x) => s + (Number(x.katilim) || 0), 0); }
 
@@ -75,7 +76,7 @@ export default function Admin() {
             options={BIRIMLER.map((b) => ({ value: b.key, label: b.label }))} />
           {haftalar.length > 0 && (
             <FilterSelect icon={<CalendarCheck size={14} />} placeholder="Hafta" value={hafta} onChange={setHafta}
-              options={haftalar.map((h) => ({ value: h, label: h }))} />
+              options={haftalar.map((h) => ({ value: h, label: haftaEtiketiGoster(h) }))} />
           )}
           {(city || birim) && (
             <button style={S.clearBtn} onClick={() => { setCity(""); setBirim(""); }}><X size={13} /> Temizle</button>
@@ -96,7 +97,7 @@ export default function Admin() {
           <div style={S.empty}>
             <div style={S.emptyIcon}><CalendarCheck size={22} color="#7C8C90" /></div>
             <div style={S.emptyTitle}>Bu hafta için henüz rapor girilmemiş</div>
-            <div style={S.emptySub}>{city} — {birimMeta?.label} için {hafta || "bu hafta"} rapor bulunamadı.</div>
+            <div style={S.emptySub}>{city} — {birimMeta?.label} için {hafta ? haftaEtiketiGoster(hafta) : "bu hafta"} rapor bulunamadı.</div>
           </div>
         )}
 
@@ -106,12 +107,12 @@ export default function Admin() {
               <div style={S.summaryCard}>
                 <div style={S.summaryLabel}><CalendarCheck size={13} /> Toplantı</div>
                 <div style={S.summaryValue}>{sum(toplanti)}</div>
-                <div style={S.summarySub}>{toplanti.length} lokasyon · {city} {birimMeta?.label} · {hafta}</div>
+                <div style={S.summarySub}>{toplanti.length} lokasyon · {city} {birimMeta?.label} · {hafta && haftaEtiketiGoster(hafta)}</div>
               </div>
               <div style={S.summaryCard}>
                 <div style={S.summaryLabel}><BookOpen size={13} /> Haftalık Ders</div>
                 <div style={S.summaryValue}>{sum(ders)}</div>
-                <div style={S.summarySub}>{ders.length} lokasyon · {city} {birimMeta?.label} · {hafta}</div>
+                <div style={S.summarySub}>{ders.length} lokasyon · {city} {birimMeta?.label} · {hafta && haftaEtiketiGoster(hafta)}</div>
               </div>
             </div>
 

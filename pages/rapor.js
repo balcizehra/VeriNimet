@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Check, MapPin, Plus, Minus, Sparkles, Send, 
 import { S } from "../components/styles";
 import { BIRIMLER, genericUni, OKUL_TUR } from "../components/data";
 import SearchableSelect from "../components/SearchableSelect";
+import { guncelHaftaEtiketi, haftaEtiketiGoster } from "../lib/hafta";
 
 function emptyAnswer(birim) {
   return { birim, toplantiYapildi: null, toplantiLokasyonlar: [], dersYapildi: null, dersLokasyonlar: [] };
@@ -34,6 +35,7 @@ export default function Rapor() {
   const [stepIdx, setStepIdx] = useState(0);
   const [subStep, setSubStep] = useState(0);
   const [hataMesaji, setHataMesaji] = useState("");
+  const haftaGosterim = useMemo(() => haftaEtiketiGoster(guncelHaftaEtiketi()), []);
 
   useEffect(() => {
     fetch("/api/auth/me").then((r) => r.json()).then(({ session }) => {
@@ -163,6 +165,7 @@ export default function Rapor() {
               <span style={S.brandText}>GENÇ İHH</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ ...S.cityPill, cursor: "default" }} title="Rapor bu haftaya kaydedilecek">{haftaGosterim}</div>
               <div style={S.cityPill}><MapPin size={13} /> {oturum.il}</div>
               <button onClick={cikisYap} title="Çıkış yap" style={{ ...S.ghostBtn, padding: 8 }}><LogOut size={14} /></button>
             </div>
