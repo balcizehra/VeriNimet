@@ -5,6 +5,7 @@ import { S } from "../components/styles";
 import { BIRIMLER, genericUni, OKUL_TUR } from "../components/data";
 import SearchableSelect from "../components/SearchableSelect";
 import { guncelHaftaEtiketi, haftaEtiketiGoster } from "../lib/hafta";
+import { Logo } from "../components/Logo";
 
 function emptyAnswer(birim) {
   return { birim, toplantiYapildi: null, toplantiLokasyonlar: [], dersYapildi: null, dersLokasyonlar: [] };
@@ -161,7 +162,7 @@ export default function Rapor() {
         <div style={S.header}>
           <div style={S.headerTop}>
             <div style={S.brandRow}>
-              <div style={S.logoDot} />
+              <Logo size={26} />
               <span style={S.brandText}>GENÇ İHH</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

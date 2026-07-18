@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 import { ChevronRight, Eye, EyeOff } from "lucide-react"; // Göz ikonlarını ekledik
 import { S } from "../components/styles";
+import { Logo } from "../components/Logo";
 
 export default function Login() {
   const router = useRouter();
@@ -46,7 +47,7 @@ export default function Login() {
         <div style={S.header}>
           <div style={S.headerTop}>
             <div style={S.brandRow}>
-              <div style={S.logoDot} />
+              <Logo size={28} />
               <span style={S.brandText}>GENÇ İHH</span>
             </div>
           </div>
@@ -54,6 +55,9 @@ export default function Login() {
 
         <div style={S.body} className="fade">
           <div style={S.eyebrow}>RAPORLAMA SİSTEMİ</div>
+          <div style={{ textAlign: "center", marginBottom: 8 }}>
+  <img src="/vertical.png" alt="Genç İHH" style={{ width: 96, height: "auto" }} />
+</div>
           <h1 style={S.h1}>Giriş yap</h1>
           <p style={S.sub}>Kullanıcı ID'niz ve şifrenizle sisteme giriş yapın.</p>
 
