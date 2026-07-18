@@ -1,25 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { MapPin, Building2, CalendarCheck, BookOpen, ChevronDown, X, Users, LogOut, TrendingUp, PieChart as PieIcon, Search } from "lucide-react";
+import { MapPin, Building2, CalendarCheck, BookOpen, ChevronDown, X, Users, LogOut, TrendingUp, PieChart as PieIcon, BarChart2, Search } from "lucide-react";
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
   LineChart, Line, XAxis, YAxis, CartesianGrid,
 } from "recharts";
 import { S } from "../components/styles";
-import { BIRIMLER } from "../components/data";
+import { BIRIMLER, BIRIM_RENK } from "../components/data";
 
 function sum(arr) { return arr.reduce((s, x) => s + (Number(x.katilim) || 0), 0); }
 
 function norm(s) {
   return (s || "").toLocaleLowerCase("tr").trim();
 }
-
-const BIRIM_RENK = {
-  universite: "#17A673",
-  lise: "#4C6FFF",
-  ortaokul: "#F5A623",
-  cocuk: "#D95B43",
-};
 
 export default function Admin() {
   const router = useRouter();
@@ -116,7 +109,14 @@ export default function Admin() {
               options={haftalar.map((h) => ({ value: h, label: h }))} />
           )}
           {(city || birim) && (
+            <>
             <button style={S.clearBtn} onClick={() => { setCity(""); setBirim(""); }}><X size={13} /> Temizle</button>
+            <button style={S.grafikBtn} onClick={() => router.push(
+  `/analytics?modul=lokasyon${city ? `&il=${encodeURIComponent(city)}` : ""}${birim ? `&birim=${birim}` : ""}`
+)}>
+  <BarChart2 size={13} /> Lokasyon Analitiği
+</button>
+            </>
           )}
         </div>
 
@@ -151,10 +151,12 @@ export default function Admin() {
 
             <Section icon={<CalendarCheck size={16} />} title="Komisyon Toplantıları" rows={toplanti}
               emptyText="Bu hafta bu birim için toplantı yapılmadı."
-              totalLabel={(n, kisi) => `Toplam ${n} lokasyonda, ${kisi} kişi ile toplantı yapıldı.`} />
+              totalLabel={(n, kisi) => `Toplam ${n} lokasyonda, ${kisi} kişi ile toplantı yapıldı.`}
+              analyticsHref={`/analytics?modul=toplanti&il=${encodeURIComponent(city)}&birim=${birim}`} />
             <Section icon={<BookOpen size={16} />} title="Haftalık Dersler" rows={ders}
               emptyText="Bu hafta bu birim için haftalık ders yapılmadı."
-              totalLabel={(n, kisi) => `Toplam ${n} lokasyonda, ${kisi} kişi ile haftalık ders yapıldı.`} />
+              totalLabel={(n, kisi) => `Toplam ${n} lokasyonda, ${kisi} kişi ile haftalık ders yapıldı.`}
+              analyticsHref={`/analytics?modul=ders&il=${encodeURIComponent(city)}&birim=${birim}`} />
           </div>
         )}
       </div>
@@ -253,7 +255,8 @@ function FilterSelect({ icon, placeholder, value, onChange, options, disabled })
   );
 }
 
-function Section({ icon, title, rows, emptyText, totalLabel }) {
+function Section({ icon, title, rows, emptyText, totalLabel, analyticsHref }) {
+  const router = useRouter();
   const [arama, setArama] = useState("");
   const q = norm(arama);
   const filtered = !q ? rows : rows.filter((r) => norm(r.ad).includes(q));
@@ -261,22 +264,26 @@ function Section({ icon, title, rows, emptyText, totalLabel }) {
 
   return (
     <div style={S.section}>
-      <div style={{ ...S.sectionHead, justifyContent: "space-between", marginBottom: rows.length > 0 ? 12 : undefined }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-          {icon}<span>{title}</span>
+      <div style={{ ...S.sectionHeadRow, marginBottom: rows.length > 0 ? 12 : undefined }}>
+        <div style={S.sectionHead}>{icon}<span>{title}</span></div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {analyticsHref && (
+            <button style={S.grafikBtn} onClick={() => router.push(analyticsHref)}>
+              <BarChart2 size={13} /> Grafikler
+            </button>
+          )}
+          {rows.length > 0 && (
+            <div style={{ position: "relative", width: 200, maxWidth: "100%" }}>
+              <Search size={13} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#7C8C90", pointerEvents: "none" }} />
+              <input
+                style={{ ...S.input, padding: "7px 10px 7px 28px", fontSize: 12.5 }}
+                placeholder="Lokasyon ara…"
+                value={arama}
+                onChange={(e) => setArama(e.target.value)}
+              />
+            </div>
+          )}
         </div>
-
-        {rows.length > 0 && (
-          <div style={{ position: "relative", width: 220, maxWidth: "45%" }}>
-            <Search size={13} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#7C8C90", pointerEvents: "none" }} />
-            <input
-              style={{ ...S.input, padding: "7px 10px 7px 28px", fontSize: 12.5 }}
-              placeholder="Üniversite ara…"
-              value={arama}
-              onChange={(e) => setArama(e.target.value)}
-            />
-          </div>
-        )}
       </div>
 
       {rows.length === 0 ? (
