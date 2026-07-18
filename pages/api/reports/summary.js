@@ -1,6 +1,6 @@
 import prisma from "../../../lib/prisma";
 import { requireRole } from "../../../lib/auth";
-import { guncelHaftaEtiketi } from "../../../lib/hafta";
+import { guncelHaftaEtiketi, gecerliHaftaMi } from "../../../lib/hafta";
 
 const BIRIMLER_KEYS = ["universite", "lise", "ortaokul", "cocuk"];
 const TREND_HAFTA_SAYISI = 8;
@@ -49,9 +49,12 @@ export default requireRole(async function handler(req, res) {
     select: { hafta: true },
     distinct: ["hafta"],
     orderBy: { hafta: "desc" },
-    take: TREND_HAFTA_SAYISI,
   });
-  const haftaListesi = haftaKayitlari.map((h) => h.hafta).reverse(); // eskiden yeniye
+  const haftaListesi = haftaKayitlari
+    .map((h) => h.hafta)
+    .filter(gecerliHaftaMi)
+    .sort()
+    .slice(-TREND_HAFTA_SAYISI);
 
   let trend = [];
   if (haftaListesi.length > 0) {
