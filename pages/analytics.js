@@ -11,6 +11,21 @@ const IL_PALETTE = ["#17A673", "#4C6FFF", "#F5A623", "#D95B43", "#8E44AD", "#00A
 
 function norm(s) { return (s || "").toLocaleLowerCase("tr").trim(); }
 
+function degisimGoster(degisim) {  
+  if (!degisim) return { deger: "—", sub: "Yeterli veri yok" };  
+  if (degisim.tip === "none") return { deger: "0%", sub: "Değişim yok" };  
+  if (degisim.tip === "yeni") return { deger: `+${degisim.guncel}`, sub: "Önceki hafta veri yoktu" };  
+  const artis = degisim.deger >= 0;  
+  return {    
+    deger: `${artis ? "+" : ""}${degisim.deger}%`,    
+    sub: (      
+      <span style={artis ? S.kpiDeltaUp : S.kpiDeltaDown}>        
+        {artis ? <TrendingUp size={12} /> : <TrendingDown size={12} />} önceki haftaya göre      
+      </span>    
+    ),  
+  };
+}
+
 export default function Analytics() {
   const router = useRouter();
   const [oturum, setOturum] = useState(null);
@@ -141,7 +156,7 @@ function Kpi({ label, value, sub }) {
 }
 
 function ToplantiDersGorunumu({ data, boyut, setBoyut, lineKeys, trendData, seciliSayisi }) {
-  const { toplamKatilim, toplamLokasyon, ortalamaKatilimLokasyon, degisimYuzde, ilKarsilastirma, birimKarsilastirma } = data;
+  const { toplamKatilim, toplamLokasyon, ortalamaKatilimLokasyon, ilKarsilastirma, birimKarsilastirma } = data;
 
   const rankData = boyut === "birim"
     ? birimKarsilastirma.map((b) => ({ ad: BIRIMLER.find((x) => x.key === b.birim)?.label || b.birim, katilim: b.katilim }))
@@ -156,13 +171,10 @@ function ToplantiDersGorunumu({ data, boyut, setBoyut, lineKeys, trendData, seci
       <div style={S.summaryRow}>
         <Kpi label="Toplam Katılım" value={toplamKatilim} sub={`${toplamLokasyon} lokasyon`} />
         <Kpi label="Ortalama Katılım / Lokasyon" value={ortalamaKatilimLokasyon} />
-        <Kpi label="Haftalık Değişim"
-          value={degisimYuzde === null ? "—" : `${degisimYuzde > 0 ? "+" : ""}${degisimYuzde}%`}
-          sub={degisimYuzde === null ? "Yeterli veri yok" : (
-            <span style={degisimYuzde >= 0 ? S.kpiDeltaUp : S.kpiDeltaDown}>
-              {degisimYuzde >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />} önceki haftaya göre
-            </span>
-          )} />
+        {(() => {  
+          const d = degisimGoster(data.degisim);  
+          return <Kpi label="Haftalık Değişim" value={d.deger} sub={d.sub} />;
+        })()}
       </div>
 
       <div style={{ padding: "0 22px 10px", display: "flex", gap: 8 }}>
@@ -228,6 +240,7 @@ function ToplantiDersGorunumu({ data, boyut, setBoyut, lineKeys, trendData, seci
   );
 }
 
+// Keep your exact same LokasyonGorunumu function unmodified below
 function LokasyonGorunumu({ data, arama, setArama }) {
   const { toplamLokasyon, toplamKatilim, ortalamaKatilimLokasyon, enAktif, lokasyonlar, turKarsilastirma } = data;
   const q = norm(arama);

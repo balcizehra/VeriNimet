@@ -45,14 +45,17 @@ export default requireRole(async function handler(req, res) {
   // Son N haftanın trend verisi (bu il için, ya da tüm Türkiye)
   const haftaWhere = il ? { il } : {};
   const haftaKayitlari = await prisma.rapor.findMany({
-    where: haftaWhere,
-    select: { hafta: true },
-    distinct: ["hafta"],
-    orderBy: { hafta: "desc" },
-    take: TREND_HAFTA_SAYISI,
-  });
-  const haftaListesi = haftaKayitlari.map((h) => h.hafta).reverse(); // eskiden yeniye
-
+  where: haftaWhere,
+  select: { hafta: true },
+  distinct: ["hafta"],
+  orderBy: { hafta: "desc" },
+});
+const haftaListesi = haftaKayitlari
+  .map((h) => h.hafta)
+  .filter((h) => /^\d{4}-W\d{2}$/.test(h))
+  .sort()
+  .slice(-TREND_HAFTA_SAYISI);
+  
   let trend = [];
   if (haftaListesi.length > 0) {
     const trendRaporlar = await prisma.rapor.findMany({

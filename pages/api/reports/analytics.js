@@ -11,9 +11,13 @@ function parseList(v) {
 
 async function sonHaftalar(where, n) {
   const kayitlar = await prisma.rapor.findMany({
-    where, select: { hafta: true }, distinct: ["hafta"], orderBy: { hafta: "desc" }, take: n,
+    where, select: { hafta: true }, distinct: ["hafta"], orderBy: { hafta: "desc" },
   });
-  return kayitlar.map((k) => k.hafta).reverse();
+  return kayitlar
+    .map((k) => k.hafta)
+    .filter((h) => /^\d{4}-W\d{2}$/.test(h))
+    .sort()
+    .slice(-n);
 }
 
 export default requireRole(async function handler(req, res) {
@@ -102,14 +106,27 @@ export default requireRole(async function handler(req, res) {
 
   const trend = haftalar.map((h) => ({ hafta: h, il: haftaIlMap[h], birim: haftaBirimMap[h] }));
 
-  const sonIki = haftalar.slice(-2).map((h) => Object.values(haftaIlMap[h] || {}).reduce((s, v) => s + v, 0));
-  const degisimYuzde = sonIki.length === 2 && sonIki[0] > 0
-    ? Math.round(((sonIki[1] - sonIki[0]) / sonIki[0]) * 1000) / 10
-    : null;
+  // Fixed Weekly Change Calculation Integration
+  const sonIkiHafta = haftalar.slice(-2);
+  const oncekiKatilim = sonIkiHafta.length === 2  ? Object.values(haftaIlMap[sonIkiHafta[0]] || {}).reduce((s, v) => s + v, 0) : null;
+  const guncelKatilim = sonIkiHafta.length === 2  ? Object.values(haftaIlMap[sonIkiHafta[1]] || {}).reduce((s, v) => s + v, 0) : null;
+  
+  let degisim = null;
+  if (oncekiKatilim !== null && guncelKatilim !== null) {  
+    if (oncekiKatilim === 0 && guncelKatilim === 0) {    
+      degisim = { tip: "none" };  
+    } else if (oncekiKatilim === 0 && guncelKatilim > 0) {    
+      degisim = { tip: "yeni", guncel: guncelKatilim };   
+    } else if (oncekiKatilim > 0 && guncelKatilim === 0) {    
+      degisim = { tip: "yuzde", deger: -100 };  
+    } else {    
+      degisim = { tip: "yuzde", deger: Math.round(((guncelKatilim - oncekiKatilim) / oncekiKatilim) * 1000) / 10 };  
+    }
+  }
 
   res.status(200).json({
     modul, haftalar, toplamKatilim, toplamLokasyon,
     ortalamaKatilimLokasyon: toplamLokasyon ? Math.round((toplamKatilim / toplamLokasyon) * 10) / 10 : 0,
-    degisimYuzde, ilKarsilastirma, birimKarsilastirma, trend,
+    degisim, ilKarsilastirma, birimKarsilastirma, trend,
   });
 }, "admin");
