@@ -6,6 +6,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
 } from "recharts";
 import { S } from "../components/styles";
+import IndirmeButonu from "../components/IndirmeButonu";
 
 import { BIRIMLER, BIRIM_RENK } from "../components/data";
 import { haftaEtiketiGoster } from "../lib/hafta";
@@ -89,14 +90,17 @@ export default function Admin() {
 
   return (
     <div style={S.page}>
-      <div style={S.shellWide}>
+      <div id="capture-root" style={S.shellWide}>
         <div style={{ padding: "20px 22px 16px", borderBottom: "1px solid #EEF2F1" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
             <div style={S.brandRow}>
               <div style={S.logoDot} />
               <span style={{ ...S.brandText, color: "#17A673" }}>GENÇ İHH · GENEL MERKEZ PANELİ</span>
             </div>
-            <button onClick={cikisYap} style={{ ...S.ghostBtn, padding: 8 }} title="Çıkış yap"><LogOut size={14} /></button>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <IndirmeButonu />
+              <button onClick={cikisYap} style={{ ...S.ghostBtn, padding: 8 }} title="Çıkış yap"><LogOut size={14} /></button>
+            </div>
           </div>
           <div style={S.h1}>Haftalık Saha Raporları</div>
         </div>

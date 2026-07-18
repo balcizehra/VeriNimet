@@ -157,7 +157,7 @@ export default function Rapor() {
 
   return (
     <div style={S.page}>
-      <div style={S.shell}>
+      <div id="app-shell" style={S.shell}>
         <div style={S.header}>
           <div style={S.headerTop}>
             <div style={S.brandRow}>
