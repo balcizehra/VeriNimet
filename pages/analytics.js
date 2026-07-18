@@ -6,6 +6,7 @@ import {
 } from "recharts";
 import { S } from "../components/styles";
 import { BIRIMLER, BIRIM_RENK } from "../components/data";
+import IndirmeButonu from "../components/IndirmeButonu";
 
 const IL_PALETTE = ["#17A673", "#4C6FFF", "#F5A623", "#D95B43", "#8E44AD", "#00A8CC", "#C2185B"];
 
@@ -48,7 +49,8 @@ export default function Analytics() {
     if (seciliBirimler.length) params.set("birim", seciliBirimler.join(","));
     fetch(`/api/reports/analytics?${params.toString()}`)
       .then((r) => r.json())
-      .then(setData)
+      .then((d) => setData(d && typeof d === "object" ? d : {}))
+      .catch(() => setData({}))
       .finally(() => setYukleniyor(false));
   }, [oturum, modul, seciliIller, seciliBirimler]);
 
@@ -63,7 +65,7 @@ export default function Analytics() {
 
   const trendData = useMemo(() => {
     if (!data?.trend) return [];
-    return data.trend.map((t) => ({ hafta: t.hafta, ...(boyut === "birim" ? t.birim : t.il) }));
+    return data.trend.map((t) => ({ hafta: t.hafta, ...(boyut === "birim" ? (t.birim || {}) : (t.il || {})) }));
   }, [data, boyut]);
 
   const lineKeys = boyut === "birim"
@@ -74,13 +76,16 @@ export default function Analytics() {
 
   return (
     <div style={S.page}>
-      <div style={S.shellWide}>
+      <div id="capture-root" style={S.shellWide}>
         <div style={{ padding: "20px 22px 16px", borderBottom: "1px solid #EEF2F1" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
             <button style={{ ...S.ghostBtn, padding: "8px 12px" }} onClick={() => router.push("/admin")}>
               <ArrowLeft size={14} /> Panele Dön
             </button>
-            <button onClick={cikisYap} style={{ ...S.ghostBtn, padding: 8 }} title="Çıkış yap"><LogOut size={14} /></button>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <IndirmeButonu />
+              <button onClick={cikisYap} style={{ ...S.ghostBtn, padding: 8 }} title="Çıkış yap"><LogOut size={14} /></button>
+            </div>
           </div>
           <div style={S.h1}>Analitik ve Karşılaştırma</div>
         </div>
@@ -141,7 +146,14 @@ function Kpi({ label, value, sub }) {
 }
 
 function ToplantiDersGorunumu({ data, boyut, setBoyut, lineKeys, trendData, seciliSayisi }) {
-  const { toplamKatilim, toplamLokasyon, ortalamaKatilimLokasyon, degisimYuzde, ilKarsilastirma, birimKarsilastirma } = data;
+  const {
+    toplamKatilim = 0,
+    toplamLokasyon = 0,
+    ortalamaKatilimLokasyon = 0,
+    degisimYuzde = null,
+    ilKarsilastirma = [],
+    birimKarsilastirma = [],
+  } = data || {};
 
   const rankData = boyut === "birim"
     ? birimKarsilastirma.map((b) => ({ ad: BIRIMLER.find((x) => x.key === b.birim)?.label || b.birim, katilim: b.katilim }))
@@ -229,7 +241,15 @@ function ToplantiDersGorunumu({ data, boyut, setBoyut, lineKeys, trendData, seci
 }
 
 function LokasyonGorunumu({ data, arama, setArama }) {
-  const { toplamLokasyon, toplamKatilim, ortalamaKatilimLokasyon, enAktif, lokasyonlar, turKarsilastirma } = data;
+  const {
+    toplamLokasyon = 0,
+    toplamKatilim = 0,
+    ortalamaKatilimLokasyon = 0,
+    enAktif = null,
+    lokasyonlar = [],
+    turKarsilastirma = [],
+  } = data || {};
+
   const q = norm(arama);
   const filtered = !q ? lokasyonlar : lokasyonlar.filter((l) => norm(l.ad).includes(q));
   const top10 = lokasyonlar.slice(0, 10).map((l) => ({ ad: l.ad, katilim: l.katilim }));
