@@ -1,28 +1,30 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
-import { MapPin, ArrowLeft, TrendingUp, TrendingDown, Search, LogOut, Users } from "lucide-react";
+import { MapPin, ArrowLeft, Home, TrendingUp, TrendingDown, Search, LogOut, Users } from "lucide-react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
 import { S } from "../components/styles";
 import { BIRIMLER, BIRIM_RENK } from "../components/data";
+import IndirmeButonu from "../components/IndirmeButonu";
+import { haftaEtiketiGoster } from "../lib/hafta";
 
 const IL_PALETTE = ["#17A673", "#4C6FFF", "#F5A623", "#D95B43", "#8E44AD", "#00A8CC", "#C2185B"];
 
 function norm(s) { return (s || "").toLocaleLowerCase("tr").trim(); }
 
-function degisimGoster(degisim) {  
-  if (!degisim) return { deger: "—", sub: "Yeterli veri yok" };  
-  if (degisim.tip === "none") return { deger: "0%", sub: "Değişim yok" };  
-  if (degisim.tip === "yeni") return { deger: `+${degisim.guncel}`, sub: "Önceki hafta veri yoktu" };  
-  const artis = degisim.deger >= 0;  
-  return {    
-    deger: `${artis ? "+" : ""}${degisim.deger}%`,    
-    sub: (      
-      <span style={artis ? S.kpiDeltaUp : S.kpiDeltaDown}>        
-        {artis ? <TrendingUp size={12} /> : <TrendingDown size={12} />} önceki haftaya göre      
-      </span>    
-    ),  
+function degisimGoster(degisim) {
+  if (!degisim) return { deger: "—", sub: "Yeterli veri yok" };
+  if (degisim.tip === "none") return { deger: "0%", sub: "Değişim yok" };
+  if (degisim.tip === "yeni") return { deger: `+${degisim.guncel}`, sub: "Önceki hafta veri yoktu" };
+  const artis = degisim.deger >= 0;
+  return {
+    deger: `${artis ? "+" : ""}${degisim.deger}%`,
+    sub: (
+      <span style={artis ? S.kpiDeltaUp : S.kpiDeltaDown}>
+        {artis ? <TrendingUp size={12} /> : <TrendingDown size={12} />} önceki haftaya göre
+      </span>
+    ),
   };
 }
 
@@ -63,7 +65,8 @@ export default function Analytics() {
     if (seciliBirimler.length) params.set("birim", seciliBirimler.join(","));
     fetch(`/api/reports/analytics?${params.toString()}`)
       .then((r) => r.json())
-      .then(setData)
+      .then((d) => setData(d && typeof d === "object" ? d : {}))
+      .catch(() => setData({}))
       .finally(() => setYukleniyor(false));
   }, [oturum, modul, seciliIller, seciliBirimler]);
 
@@ -78,7 +81,7 @@ export default function Analytics() {
 
   const trendData = useMemo(() => {
     if (!data?.trend) return [];
-    return data.trend.map((t) => ({ hafta: t.hafta, ...(boyut === "birim" ? t.birim : t.il) }));
+    return data.trend.map((t) => ({ hafta: t.hafta, ...(boyut === "birim" ? (t.birim || {}) : (t.il || {})) }));
   }, [data, boyut]);
 
   const lineKeys = boyut === "birim"
@@ -89,13 +92,21 @@ export default function Analytics() {
 
   return (
     <div style={S.page}>
-      <div style={S.shellWide}>
+      <div id="capture-root" style={S.shellWide}>
         <div style={{ padding: "20px 22px 16px", borderBottom: "1px solid #EEF2F1" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-            <button style={{ ...S.ghostBtn, padding: "8px 12px" }} onClick={() => router.push("/admin")}>
-              <ArrowLeft size={14} /> Panele Dön
-            </button>
-            <button onClick={cikisYap} style={{ ...S.ghostBtn, padding: 8 }} title="Çıkış yap"><LogOut size={14} /></button>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button style={{ ...S.ghostBtn, padding: "8px 12px" }} onClick={() => router.back()}>
+                <ArrowLeft size={14} /> Geri
+              </button>
+              <button style={{ ...S.ghostBtn, padding: "8px 12px" }} onClick={() => router.push("/admin")}>
+                <Home size={14} /> Panele Dön
+              </button>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <IndirmeButonu />
+              <button onClick={cikisYap} style={{ ...S.ghostBtn, padding: 8 }} title="Çıkış yap"><LogOut size={14} /></button>
+            </div>
           </div>
           <div style={S.h1}>Analitik ve Karşılaştırma</div>
         </div>
@@ -171,8 +182,8 @@ function ToplantiDersGorunumu({ data, boyut, setBoyut, lineKeys, trendData, seci
       <div style={S.summaryRow}>
         <Kpi label="Toplam Katılım" value={toplamKatilim} sub={`${toplamLokasyon} lokasyon`} />
         <Kpi label="Ortalama Katılım / Lokasyon" value={ortalamaKatilimLokasyon} />
-        {(() => {  
-          const d = degisimGoster(data.degisim);  
+        {(() => {
+          const d = degisimGoster(data.degisim);
           return <Kpi label="Haftalık Değişim" value={d.deger} sub={d.sub} />;
         })()}
       </div>
@@ -188,9 +199,9 @@ function ToplantiDersGorunumu({ data, boyut, setBoyut, lineKeys, trendData, seci
           <ResponsiveContainer width="100%" height={240}>
             <LineChart data={trendData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F1" />
-              <XAxis dataKey="hafta" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip />
+              <XAxis dataKey="hafta" tickFormatter={haftaEtiketiGoster} tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} label={{ value: "Katılımcı Sayısı", angle: -90, position: "insideLeft", style: { fontSize: 11, fill: "#7C8C90" } }} />
+              <Tooltip labelFormatter={haftaEtiketiGoster} formatter={(value, name) => [`${value} kişi`, name]} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
               {lineKeys.map((k, i) => (
                 <Line key={k} type="monotone" dataKey={k}
@@ -209,7 +220,7 @@ function ToplantiDersGorunumu({ data, boyut, setBoyut, lineKeys, trendData, seci
               <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F1" />
               <XAxis type="number" tick={{ fontSize: 11 }} />
               <YAxis type="category" dataKey="ad" width={110} tick={{ fontSize: 11 }} />
-              <Tooltip />
+              <Tooltip formatter={(v) => `${v} kişi`} />
               <Bar dataKey="katilim" fill="#17A673" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -225,7 +236,7 @@ function ToplantiDersGorunumu({ data, boyut, setBoyut, lineKeys, trendData, seci
                 <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F1" />
                 <XAxis dataKey="ad" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
+                <Tooltip formatter={(v) => `${v}`} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
                 <Bar dataKey="katilim" name="Katılım" fill="#17A673" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="lokasyon" name="Lokasyon" fill="#0F3A44" radius={[4, 4, 0, 0]} />
@@ -240,9 +251,16 @@ function ToplantiDersGorunumu({ data, boyut, setBoyut, lineKeys, trendData, seci
   );
 }
 
-// Keep your exact same LokasyonGorunumu function unmodified below
 function LokasyonGorunumu({ data, arama, setArama }) {
-  const { toplamLokasyon, toplamKatilim, ortalamaKatilimLokasyon, enAktif, lokasyonlar, turKarsilastirma } = data;
+  const {
+    toplamLokasyon = 0,
+    toplamKatilim = 0,
+    ortalamaKatilimLokasyon = 0,
+    enAktif = null,
+    lokasyonlar = [],
+    turKarsilastirma = [],
+  } = data || {};
+
   const q = norm(arama);
   const filtered = !q ? lokasyonlar : lokasyonlar.filter((l) => norm(l.ad).includes(q));
   const top10 = lokasyonlar.slice(0, 10).map((l) => ({ ad: l.ad, katilim: l.katilim }));
@@ -264,7 +282,7 @@ function LokasyonGorunumu({ data, arama, setArama }) {
               <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F1" />
               <XAxis type="number" tick={{ fontSize: 11 }} />
               <YAxis type="category" dataKey="ad" width={140} tick={{ fontSize: 10.5 }} />
-              <Tooltip />
+              <Tooltip formatter={(v) => `${v} kişi`} />
               <Bar dataKey="katilim" fill="#17A673" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -278,7 +296,7 @@ function LokasyonGorunumu({ data, arama, setArama }) {
                 <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F1" />
                 <XAxis type="number" tick={{ fontSize: 11 }} />
                 <YAxis type="category" dataKey="tur" width={140} tick={{ fontSize: 10.5 }} />
-                <Tooltip />
+                <Tooltip formatter={(v) => `${v} kişi (ortalama)`} />
                 <Bar dataKey="ortalama" fill="#4C6FFF" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>

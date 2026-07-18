@@ -1,5 +1,6 @@
 import prisma from "../../../lib/prisma";
 import { requireRole } from "../../../lib/auth";
+import { gecerliHaftaMi } from "../../../lib/hafta";
 
 const BIRIMLER_KEYS = ["universite", "lise", "ortaokul", "cocuk"];
 const HAFTA_SAYISI = 8;
@@ -13,11 +14,7 @@ async function sonHaftalar(where, n) {
   const kayitlar = await prisma.rapor.findMany({
     where, select: { hafta: true }, distinct: ["hafta"], orderBy: { hafta: "desc" },
   });
-  return kayitlar
-    .map((k) => k.hafta)
-    .filter((h) => /^\d{4}-W\d{2}$/.test(h))
-    .sort()
-    .slice(-n);
+  return kayitlar.map((k) => k.hafta).filter(gecerliHaftaMi).sort().slice(-n);
 }
 
 export default requireRole(async function handler(req, res) {
@@ -106,21 +103,22 @@ export default requireRole(async function handler(req, res) {
 
   const trend = haftalar.map((h) => ({ hafta: h, il: haftaIlMap[h], birim: haftaBirimMap[h] }));
 
-  // Fixed Weekly Change Calculation Integration
   const sonIkiHafta = haftalar.slice(-2);
-  const oncekiKatilim = sonIkiHafta.length === 2  ? Object.values(haftaIlMap[sonIkiHafta[0]] || {}).reduce((s, v) => s + v, 0) : null;
-  const guncelKatilim = sonIkiHafta.length === 2  ? Object.values(haftaIlMap[sonIkiHafta[1]] || {}).reduce((s, v) => s + v, 0) : null;
-  
+  const oncekiKatilim = sonIkiHafta.length === 2
+    ? Object.values(haftaIlMap[sonIkiHafta[0]] || {}).reduce((s, v) => s + v, 0) : null;
+  const guncelKatilim = sonIkiHafta.length === 2
+    ? Object.values(haftaIlMap[sonIkiHafta[1]] || {}).reduce((s, v) => s + v, 0) : null;
+
   let degisim = null;
-  if (oncekiKatilim !== null && guncelKatilim !== null) {  
-    if (oncekiKatilim === 0 && guncelKatilim === 0) {    
-      degisim = { tip: "none" };  
-    } else if (oncekiKatilim === 0 && guncelKatilim > 0) {    
-      degisim = { tip: "yeni", guncel: guncelKatilim };   
-    } else if (oncekiKatilim > 0 && guncelKatilim === 0) {    
-      degisim = { tip: "yuzde", deger: -100 };  
-    } else {    
-      degisim = { tip: "yuzde", deger: Math.round(((guncelKatilim - oncekiKatilim) / oncekiKatilim) * 1000) / 10 };  
+  if (oncekiKatilim !== null && guncelKatilim !== null) {
+    if (oncekiKatilim === 0 && guncelKatilim === 0) {
+      degisim = { tip: "none" };
+    } else if (oncekiKatilim === 0 && guncelKatilim > 0) {
+      degisim = { tip: "yeni", guncel: guncelKatilim };
+    } else if (oncekiKatilim > 0 && guncelKatilim === 0) {
+      degisim = { tip: "yuzde", deger: -100 };
+    } else {
+      degisim = { tip: "yuzde", deger: Math.round(((guncelKatilim - oncekiKatilim) / oncekiKatilim) * 1000) / 10 };
     }
   }
 

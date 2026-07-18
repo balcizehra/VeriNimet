@@ -42,7 +42,7 @@ export default function Login() {
 
   return (
     <div style={S.page}>
-      <div style={{ ...S.shell, maxWidth: 380, marginTop: 60 }}>
+      <div id="app-shell" style={{ ...S.shell, maxWidth: 380, marginTop: 60 }}>
         <div style={S.header}>
           <div style={S.headerTop}>
             <div style={S.brandRow}>

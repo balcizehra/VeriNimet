@@ -1,6 +1,6 @@
 import prisma from "../../../lib/prisma";
 import { requireRole } from "../../../lib/auth";
-import { guncelHaftaEtiketi } from "../../../lib/hafta";
+import { guncelHaftaEtiketi, gecerliHaftaMi } from "../../../lib/hafta";
 
 const BIRIMLER_KEYS = ["universite", "lise", "ortaokul", "cocuk"];
 const TREND_HAFTA_SAYISI = 8;
@@ -45,17 +45,17 @@ export default requireRole(async function handler(req, res) {
   // Son N haftanın trend verisi (bu il için, ya da tüm Türkiye)
   const haftaWhere = il ? { il } : {};
   const haftaKayitlari = await prisma.rapor.findMany({
-  where: haftaWhere,
-  select: { hafta: true },
-  distinct: ["hafta"],
-  orderBy: { hafta: "desc" },
-});
-const haftaListesi = haftaKayitlari
-  .map((h) => h.hafta)
-  .filter((h) => /^\d{4}-W\d{2}$/.test(h))
-  .sort()
-  .slice(-TREND_HAFTA_SAYISI);
-  
+    where: haftaWhere,
+    select: { hafta: true },
+    distinct: ["hafta"],
+    orderBy: { hafta: "desc" },
+  });
+  const haftaListesi = haftaKayitlari
+    .map((h) => h.hafta)
+    .filter(gecerliHaftaMi)
+    .sort()
+    .slice(-TREND_HAFTA_SAYISI);
+
   let trend = [];
   if (haftaListesi.length > 0) {
     const trendRaporlar = await prisma.rapor.findMany({

@@ -6,11 +6,10 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
 } from "recharts";
 import { S } from "../components/styles";
-
+import IndirmeButonu from "../components/IndirmeButonu";
 import { BIRIMLER, BIRIM_RENK } from "../components/data";
-import { haftaEtiketiGoster } from "../lib/hafta";
+import { haftaEtiketiGoster, gecerliHaftaMi } from "../lib/hafta";
 import ChatWidget from "../components/ChatWidget";
-
 
 function sum(arr) { return arr.reduce((s, x) => s + (Number(x.katilim) || 0), 0); }
 
@@ -27,11 +26,9 @@ export default function Admin() {
   const [haftalar, setHaftalar] = useState([]);
   const [hafta, setHafta] = useState("");
 
-  // Level 0 / 1 (özet + grafikler)
   const [summary, setSummary] = useState(null);
   const [ozetYukleniyor, setOzetYukleniyor] = useState(false);
 
-  // Level 2 (detay — mevcut davranış)
   const [rapor, setRapor] = useState(null);
   const [yukleniyor, setYukleniyor] = useState(false);
 
@@ -43,7 +40,6 @@ export default function Admin() {
     });
   }, [router]);
 
-  // Hafta listesi: seviyeye göre esnek
   useEffect(() => {
     const params = new URLSearchParams();
     if (city) params.set("il", city);
@@ -53,7 +49,6 @@ export default function Admin() {
       .then((d) => { setHaftalar(d.haftalar || []); setHafta((d.haftalar || [])[0] || ""); });
   }, [city, birim]);
 
-  // Seviye 0/1: Türkiye geneli ya da il özeti
   useEffect(() => {
     if (birim) { setSummary(null); return; }
     setOzetYukleniyor(true);
@@ -66,7 +61,6 @@ export default function Admin() {
       .finally(() => setOzetYukleniyor(false));
   }, [city, birim, hafta]);
 
-  // Seviye 2: il + birim detay (mevcut davranış, değişmedi)
   useEffect(() => {
     if (!city || !birim) { setRapor(null); return; }
     setYukleniyor(true);
@@ -90,14 +84,17 @@ export default function Admin() {
 
   return (
     <div style={S.page}>
-      <div style={S.shellWide}>
+      <div id="capture-root" style={S.shellWide}>
         <div style={{ padding: "20px 22px 16px", borderBottom: "1px solid #EEF2F1" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
             <div style={S.brandRow}>
               <div style={S.logoDot} />
               <span style={{ ...S.brandText, color: "#17A673" }}>GENÇ İHH · GENEL MERKEZ PANELİ</span>
             </div>
-            <button onClick={cikisYap} style={{ ...S.ghostBtn, padding: 8 }} title="Çıkış yap"><LogOut size={14} /></button>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <IndirmeButonu />
+              <button onClick={cikisYap} style={{ ...S.ghostBtn, padding: 8 }} title="Çıkış yap"><LogOut size={14} /></button>
+            </div>
           </div>
           <div style={S.h1}>Haftalık Saha Raporları</div>
         </div>
@@ -110,16 +107,16 @@ export default function Admin() {
             options={BIRIMLER.map((b) => ({ value: b.key, label: b.label }))} />
           {haftalar.length > 0 && (
             <FilterSelect icon={<CalendarCheck size={14} />} placeholder="Hafta" value={hafta} onChange={setHafta}
-              options={haftalar.map((h) => ({ value: h, label: haftaEtiketiGoster(h) }))} />
+              options={haftalar.filter(gecerliHaftaMi).map((h) => ({ value: h, label: haftaEtiketiGoster(h) }))} />
           )}
           {(city || birim) && (
             <>
-            <button style={S.clearBtn} onClick={() => { setCity(""); setBirim(""); }}><X size={13} /> Temizle</button>
-            <button style={S.grafikBtn} onClick={() => router.push(
-  `/analytics?modul=lokasyon${city ? `&il=${encodeURIComponent(city)}` : ""}${birim ? `&birim=${birim}` : ""}`
-)}>
-  <BarChart2 size={13} /> Lokasyon Analitiği
-</button>
+              <button style={S.clearBtn} onClick={() => { setCity(""); setBirim(""); }}><X size={13} /> Temizle</button>
+              <button style={S.grafikBtn} onClick={() => router.push(
+                `/analytics?modul=lokasyon${city ? `&il=${encodeURIComponent(city)}` : ""}${birim ? `&birim=${birim}` : ""}`
+              )}>
+                <BarChart2 size={13} /> Lokasyon Analitiği
+              </button>
             </>
           )}
         </div>
@@ -134,7 +131,7 @@ export default function Admin() {
           <div style={S.empty}>
             <div style={S.emptyIcon}><CalendarCheck size={22} color="#7C8C90" /></div>
             <div style={S.emptyTitle}>Bu hafta için henüz rapor girilmemiş</div>
-            <div style={S.emptySub}>{city} — {birimMeta?.label} için {hafta ? haftaEtiketiGoster(hafta) : "bu hafta"} rapor bulunamadı.</div>
+            <div style={S.emptySub}>{city} — {birimMeta?.label} için {gecerliHaftaMi(hafta) ? haftaEtiketiGoster(hafta) : "bu hafta"} rapor bulunamadı.</div>
           </div>
         )}
 
@@ -142,14 +139,14 @@ export default function Admin() {
           <div className="fade">
             <div style={S.summaryRow}>
               <div style={S.summaryCard}>
-                <div style={S.summaryLabel}><CalendarCheck size={13} /> Toplantı</div>
-                <div style={S.summaryValue}>{sum(toplanti)}</div>
-                <div style={S.summarySub}>{toplanti.length} lokasyon · {city} {birimMeta?.label} · {hafta && haftaEtiketiGoster(hafta)}</div>
+                <div style={S.summaryLabel}><CalendarCheck size={13} /> Komisyon Toplantıları</div>
+                <div style={S.summaryValue}>{sum(toplanti)} <span style={{ fontSize: 13, fontWeight: 600, color: "#7C8C90" }}>katılımcı</span></div>
+                <div style={S.summarySub}>{toplanti.length} lokasyon · {city} · {birimMeta?.label}{gecerliHaftaMi(hafta) ? ` · ${haftaEtiketiGoster(hafta)}` : ""}</div>
               </div>
               <div style={S.summaryCard}>
                 <div style={S.summaryLabel}><BookOpen size={13} /> Haftalık Ders</div>
-                <div style={S.summaryValue}>{sum(ders)}</div>
-                <div style={S.summarySub}>{ders.length} lokasyon · {city} {birimMeta?.label} · {hafta && haftaEtiketiGoster(hafta)}</div>
+                <div style={S.summaryValue}>{sum(ders)} <span style={{ fontSize: 13, fontWeight: 600, color: "#7C8C90" }}>katılımcı</span></div>
+                <div style={S.summarySub}>{ders.length} lokasyon · {city} · {birimMeta?.label}{gecerliHaftaMi(hafta) ? ` · ${haftaEtiketiGoster(hafta)}` : ""}</div>
               </div>
             </div>
 
@@ -178,6 +175,8 @@ function SummaryDashboard({ summary, loading, il, hafta }) {
 
   const { genel, birimOzet, trend, ilSayisi } = summary;
   const toplamKatilim = genel.toplantiKatilim + genel.dersKatilim;
+  const kapsam = il || "Tüm Türkiye";
+  const haftaEtiketi = gecerliHaftaMi(hafta) ? haftaEtiketiGoster(hafta) : "";
 
   const pieData = Object.entries(birimOzet)
     .map(([key, v]) => ({
@@ -191,19 +190,19 @@ function SummaryDashboard({ summary, loading, il, hafta }) {
     <div className="fade">
       <div style={S.summaryRow}>
         <div style={S.summaryCard}>
-          <div style={S.summaryLabel}><CalendarCheck size={13} /> Toplam Toplantı</div>
-          <div style={S.summaryValue}>{genel.toplantiKatilim}</div>
-          <div style={S.summarySub}>{genel.toplantiLokasyon} lokasyon{!il ? ` · ${ilSayisi} il` : ""} · {hafta}</div>
+          <div style={S.summaryLabel}><CalendarCheck size={13} /> Toplam Komisyon Toplantıları</div>
+          <div style={S.summaryValue}>{genel.toplantiKatilim} <span style={{ fontSize: 13, fontWeight: 600, color: "#7C8C90" }}>katılımcı</span></div>
+          <div style={S.summarySub}>{genel.toplantiLokasyon} lokasyon · {kapsam}{!il ? ` (${ilSayisi} il)` : ""}{haftaEtiketi ? ` · ${haftaEtiketi}` : ""}</div>
         </div>
         <div style={S.summaryCard}>
           <div style={S.summaryLabel}><BookOpen size={13} /> Toplam Haftalık Ders</div>
-          <div style={S.summaryValue}>{genel.dersKatilim}</div>
-          <div style={S.summarySub}>{genel.dersLokasyon} lokasyon{!il ? ` · ${ilSayisi} il` : ""} · {hafta}</div>
+          <div style={S.summaryValue}>{genel.dersKatilim} <span style={{ fontSize: 13, fontWeight: 600, color: "#7C8C90" }}>katılımcı</span></div>
+          <div style={S.summarySub}>{genel.dersLokasyon} lokasyon · {kapsam}{!il ? ` (${ilSayisi} il)` : ""}{haftaEtiketi ? ` · ${haftaEtiketi}` : ""}</div>
         </div>
         <div style={S.summaryCard}>
           <div style={S.summaryLabel}><Users size={13} /> Toplam Katılımcı</div>
           <div style={S.summaryValue}>{toplamKatilim}</div>
-          <div style={S.summarySub}>{il ? il : "Tüm Türkiye"} · {hafta}</div>
+          <div style={S.summarySub}>{kapsam}{haftaEtiketi ? ` · ${haftaEtiketi}` : ""}</div>
         </div>
       </div>
 
@@ -218,7 +217,7 @@ function SummaryDashboard({ summary, loading, il, hafta }) {
                 <Pie data={pieData} dataKey="value" nameKey="label" innerRadius={55} outerRadius={85} paddingAngle={3}>
                   {pieData.map((d) => <Cell key={d.key} fill={BIRIM_RENK[d.key] || "#7C8C90"} />)}
                 </Pie>
-                <Tooltip />
+                <Tooltip formatter={(v) => `${v} kişi`} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
               </PieChart>
             </ResponsiveContainer>
@@ -231,13 +230,13 @@ function SummaryDashboard({ summary, loading, il, hafta }) {
             <div style={S.chartEmpty}>Yeterli geçmiş veri yok.</div>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={trend}>
+              <LineChart data={trend.filter((t) => gecerliHaftaMi(t.hafta))}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F1" />
-                <XAxis dataKey="hafta" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
+                <XAxis dataKey="hafta" tickFormatter={haftaEtiketiGoster} tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} label={{ value: "Katılımcı Sayısı", angle: -90, position: "insideLeft", style: { fontSize: 11, fill: "#7C8C90" } }} />
+                <Tooltip labelFormatter={haftaEtiketiGoster} formatter={(value, name) => [`${value} kişi`, name]} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Line type="monotone" dataKey="toplanti" name="Toplantı" stroke="#17A673" strokeWidth={2.5} dot={false} />
+                <Line type="monotone" dataKey="toplanti" name="Komisyon Toplantısı" stroke="#17A673" strokeWidth={2.5} dot={false} />
                 <Line type="monotone" dataKey="ders" name="Haftalık Ders" stroke="#0F3A44" strokeWidth={2.5} dot={false} />
               </LineChart>
             </ResponsiveContainer>
