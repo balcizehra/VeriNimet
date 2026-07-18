@@ -75,7 +75,12 @@ export const S = {
   emptyTitle: { fontFamily: "'Manrope', sans-serif", fontWeight: 700, fontSize: 15, marginBottom: 6 },
   emptySub: { fontSize: 13, color: "#7C8C90", maxWidth: 320, margin: "0 auto", lineHeight: 1.5 },
 
-  summaryRow: { display: "flex", gap: 12, padding: "18px 22px 4px" },
+  summaryRow: { display: "flex", gap: 12, padding: "18px 22px 4px", flexWrap: "wrap" },
+  chartsGrid: { display: "flex", gap: 14, padding: "4px 22px 20px", flexWrap: "wrap" },
+  chartCard: { flex: "1 1 300px", minWidth: 280, border: "1px solid #E1E8E7", borderRadius: 14, padding: "16px 16px 8px", background: "#FBFCFC" },
+  chartTitle: { fontFamily: "'Manrope', sans-serif", fontWeight: 800, fontSize: 13.5, color: "#0F3A44", marginBottom: 10 },
+  chartEmpty: { fontSize: 12.5, color: "#7C8C90", textAlign: "center", padding: "40px 0" },
+  
   summaryCard: { flex: 1, border: "1px solid #E1E8E7", borderRadius: 14, padding: "14px 16px", background: "linear-gradient(180deg,#FBFCFC,#F5F8F7)" },
   summaryLabel: { display: "flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 700, color: "#17A673", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.04em" },
   summaryValue: { fontFamily: "'Manrope', sans-serif", fontSize: 30, fontWeight: 800, lineHeight: 1 },
@@ -92,4 +97,12 @@ export const S = {
   rowKisi: { display: "flex", alignItems: "center", gap: 5, fontSize: 13.5, fontWeight: 800, color: "#17A673", background: "#EEF6F3", padding: "5px 10px", borderRadius: 999 },
 
   totalBar: { marginTop: 10, fontSize: 12.5, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg,#0F3A44,#17A673)", padding: "10px 14px", borderRadius: 10 },
+
+  moduleTabs: { display: "flex", gap: 8, padding: "0 22px 16px", flexWrap: "wrap" },
+  moduleTab: { padding: "9px 16px", borderRadius: 999, border: "1px solid #E1E8E7", background: "#FBFCFC", fontSize: 13.5, fontWeight: 700, color: "#4B6169", cursor: "pointer" },
+  moduleTabActive: { background: "#0F3A44", borderColor: "#0F3A44", color: "#fff" },
+  kpiDeltaUp: { display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, color: "#17A673" },
+  kpiDeltaDown: { display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, color: "#D95B43" },
+  sectionHeadRow: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" },
+  grafikBtn: { display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 10px", border: "1px solid #E1E8E7", borderRadius: 8, background: "#FBFCFC", color: "#17A673", fontSize: 12, fontWeight: 700, cursor: "pointer" },
 };

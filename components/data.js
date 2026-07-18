@@ -141,3 +141,10 @@ export const OKUL_TUR = ["Fen Lisesi", "Anadolu Lisesi", "İmam Hatip Lisesi", "
 
 // 81 il — hem il başkanı giriş dropdown'ı hem de admin panel filtreleri için.
 export const TUM_ILLER = Object.keys(UNI_BY_CITY).sort((a, b) => a.localeCompare(b, "tr"));
+
+export const BIRIM_RENK = {
+  universite: "#17A673",
+  lise: "#4C6FFF",
+  ortaokul: "#F5A623",
+  cocuk: "#D95B43",
+};

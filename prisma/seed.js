@@ -1,11 +1,8 @@
-// Başlangıç verisi: her il için kurumsal hesap + 1 admin hesabı oluşturur.
-// Çalıştır: npm run db:seed
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 
 const prisma = new PrismaClient();
 
-// İlleri plaka kodlarıyla birlikte nesne (object) olarak tanımladık
 const CITIES = [
   { kod: "001", ad: "Adana" },
   { kod: "006", ad: "Ankara" },
@@ -27,16 +24,21 @@ const CITIES = [
   { kod: "065", ad: "Van" }
 ];
 
-const DEFAULT_IL_SIFRE = "genc2026"; // Giriş yaparken kullanacağın il şifresi
+const DEFAULT_IL_SIFRE = "genc2026"; 
 const DEFAULT_ADMIN_SIFRE = "admin2026";
 
 async function main() {
   const ilHash = await bcrypt.hash(DEFAULT_IL_SIFRE, 10);
+  
   for (const city of CITIES) {
     await prisma.il.upsert({
       where: { ad: city.ad },
-      update: { kod: city.kod }, // Eğer il varsa kodunu güncelle
-      create: { kod: city.kod, ad: city.ad, sifreHash: ilHash }, // Yoksa yeni oluştur
+      update: { kod: city.kod }, 
+      create: { 
+        kod: city.kod, 
+        ad: city.ad, 
+        sifreHash: ilHash 
+      },
     });
   }
 
@@ -44,13 +46,29 @@ async function main() {
   await prisma.admin.upsert({
     where: { kullaniciAdi: "genelmerkez" },
     update: {},
-    create: { kullaniciAdi: "genelmerkez", sifreHash: adminHash },
+    create: { 
+      kullaniciAdi: "genelmerkez", 
+      sifreHash: adminHash 
+    },
   });
 
-  console.log(`${CITIES.length} il hesabı başarıyla yüklendi/güncellendi!`);
-  console.log(`💡 İl Giriş ID Örnekleri: Konya için "042", İstanbul için "034" girilecek.`);
-  console.log(`🔑 Tüm illerin şifresi: ${DEFAULT_IL_SIFRE}`);
+  // Sistem Ayarı tablosu
+  await prisma.sistemAyari.upsert({
+    where: { anahtar: "gecen_hafta_izni" },
+    update: {},
+    create: { anahtar: "gecen_hafta_izni", degerBool: false },
+  });
+
+  console.log(`\n✅ ${CITIES.length} il hesabı başarıyla yüklendi/güncellendi!`);
   console.log(`👑 Genel Merkez Giriş ID: "genelmerkez" | Şifre: ${DEFAULT_ADMIN_SIFRE}`);
 }
 
-main().finally(() => prisma.$disconnect());
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
+  
