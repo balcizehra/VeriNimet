@@ -6,7 +6,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
 } from "recharts";
 import { S } from "../components/styles";
-import IndirmeButonu from "../components/IndirmeButonu";
+import { Logo } from "../components/Logo";
 
 import { BIRIMLER, BIRIM_RENK } from "../components/data";
 import { haftaEtiketiGoster } from "../lib/hafta";
@@ -91,17 +91,14 @@ export default function Admin() {
 
   return (
     <div style={S.page}>
-      <div id="capture-root" style={S.shellWide}>
+      <div style={S.shellWide}>
         <div style={{ padding: "20px 22px 16px", borderBottom: "1px solid #EEF2F1" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
             <div style={S.brandRow}>
-              <div style={S.logoDot} />
+              <Logo />
               <span style={{ ...S.brandText, color: "#17A673" }}>GENÇ İHH · GENEL MERKEZ PANELİ</span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <IndirmeButonu />
-              <button onClick={cikisYap} style={{ ...S.ghostBtn, padding: 8 }} title="Çıkış yap"><LogOut size={14} /></button>
-            </div>
+            <button onClick={cikisYap} style={{ ...S.ghostBtn, padding: 8 }} title="Çıkış yap"><LogOut size={14} /></button>
           </div>
           <div style={S.h1}>Haftalık Saha Raporları</div>
         </div>
@@ -195,19 +192,19 @@ function SummaryDashboard({ summary, loading, il, hafta }) {
     <div className="fade">
       <div style={S.summaryRow}>
         <div style={S.summaryCard}>
-          <div style={S.summaryLabel}><CalendarCheck size={13} /> Toplam Toplantı</div>
-          <div style={S.summaryValue}>{genel.toplantiKatilim}</div>
-          <div style={S.summarySub}>{genel.toplantiLokasyon} lokasyon{!il ? ` · ${ilSayisi} il` : ""} · {hafta}</div>
+          <div style={S.summaryLabel}><CalendarCheck size={13} /> Toplam Komisyon Toplantı</div>
+          <div style={S.summaryValue}>{genel.toplantiKatilim} <span style={{ fontSize: 13, fontWeight: 600, color: "#7C8C90" }}>katılımcı</span></div>          
+          <div style={S.summarySub}>{genel.toplantiLokasyon} lokasyon{!il ? ` · ${ilSayisi} il` : ""}</div>
         </div>
         <div style={S.summaryCard}>
           <div style={S.summaryLabel}><BookOpen size={13} /> Toplam Haftalık Ders</div>
-          <div style={S.summaryValue}>{genel.dersKatilim}</div>
-          <div style={S.summarySub}>{genel.dersLokasyon} lokasyon{!il ? ` · ${ilSayisi} il` : ""} · {hafta}</div>
+          <div style={S.summaryValue}>{genel.dersKatilim} <span style={{ fontSize: 13, fontWeight: 600, color: "#7C8C90" }}>katılımcı</span></div>          
+          <div style={S.summarySub}>{genel.dersLokasyon} lokasyon{!il ? ` · ${ilSayisi} il` : ""}</div>
         </div>
         <div style={S.summaryCard}>
           <div style={S.summaryLabel}><Users size={13} /> Toplam Katılımcı</div>
           <div style={S.summaryValue}>{toplamKatilim}</div>
-          <div style={S.summarySub}>{il ? il : "Tüm Türkiye"} · {hafta}</div>
+          <div style={S.summarySub}>{il ? il : "Tüm Türkiye"}</div>
         </div>
       </div>
 
