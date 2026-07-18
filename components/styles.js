@@ -97,4 +97,12 @@ export const S = {
   rowKisi: { display: "flex", alignItems: "center", gap: 5, fontSize: 13.5, fontWeight: 800, color: "#17A673", background: "#EEF6F3", padding: "5px 10px", borderRadius: 999 },
 
   totalBar: { marginTop: 10, fontSize: 12.5, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg,#0F3A44,#17A673)", padding: "10px 14px", borderRadius: 10 },
+
+  moduleTabs: { display: "flex", gap: 8, padding: "0 22px 16px", flexWrap: "wrap" },
+  moduleTab: { padding: "9px 16px", borderRadius: 999, border: "1px solid #E1E8E7", background: "#FBFCFC", fontSize: 13.5, fontWeight: 700, color: "#4B6169", cursor: "pointer" },
+  moduleTabActive: { background: "#0F3A44", borderColor: "#0F3A44", color: "#fff" },
+  kpiDeltaUp: { display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, color: "#17A673" },
+  kpiDeltaDown: { display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, color: "#D95B43" },
+  sectionHeadRow: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" },
+  grafikBtn: { display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 10px", border: "1px solid #E1E8E7", borderRadius: 8, background: "#FBFCFC", color: "#17A673", fontSize: 12, fontWeight: 700, cursor: "pointer" },
 };
